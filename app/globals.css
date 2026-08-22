@@ -1,26 +1,55 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f4f7f2;
+  --foreground: #10201c;
+  --surface: #fffdf6;
+  --surface-muted: #e7eee6;
+  --border: #cfdbd1;
+  --primary: #12382f;
+  --primary-foreground: #f8fff3;
+  --accent: #c9f56f;
+  --accent-foreground: #13201b;
+  --warning: #efb84a;
+  --berry: #a6475c;
+  --mist: #dce8dd;
+  --muted: #607069;
+  --ring: #8fbd65;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-warning: var(--warning);
+  --color-berry: var(--berry);
+  --color-mist: var(--mist);
+  --color-muted: var(--muted);
+  --color-ring: var(--ring);
   --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+button,
+a,
+input,
+select {
+  outline-color: var(--ring);
 }
