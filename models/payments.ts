@@ -9,6 +9,11 @@ const PaymentSchema = new Schema(
       required: true,
       index: true,
     },
+    groupBooking: {
+      type: Schema.Types.ObjectId,
+      ref: "GroupBooking",
+      index: true,
+    },
     amount: { type: Number, required: true, min: 0 },
     currency: { type: String, default: "INR" },
     gateway: { type: String, enum: ["RAZORPAY"], default: "RAZORPAY" },
@@ -24,6 +29,7 @@ const PaymentSchema = new Schema(
     idempotencyKey: { type: String, required: true, trim: true },
     paidAt: { type: Date },
     failedAt: { type: Date },
+    webhookEventIds: { type: [String], default: [] },
   },
   { timestamps: true },
 );
@@ -32,6 +38,17 @@ PaymentSchema.index({ idempotencyKey: 1 }, { unique: true });
 PaymentSchema.index({ gatewayOrderId: 1 }, { unique: true });
 PaymentSchema.index({ gatewayPaymentId: 1 }, { unique: true, sparse: true });
 PaymentSchema.index({ booking: 1, status: 1 });
+PaymentSchema.index({ groupBooking: 1, status: 1 });
+PaymentSchema.index(
+  { booking: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      status: { $in: ["CREATED", "PENDING", "SUCCESS"] },
+    },
+    name: "unique_active_payment_per_booking",
+  },
+);
 PaymentSchema.index({ status: 1, createdAt: -1 });
 
 export interface IPayment extends InferSchemaType<typeof PaymentSchema> {}

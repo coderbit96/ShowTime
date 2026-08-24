@@ -20,6 +20,10 @@ const CouponSchema = new Schema(
     applicableEvents: [{ type: Schema.Types.ObjectId, ref: "Event" }],
     applicableCategories: [{ type: Schema.Types.ObjectId, ref: "Category" }],
     active: { type: Boolean, default: true, index: true },
+    flashSaleActive: { type: Boolean, default: false, index: true },
+    flashSaleLabel: { type: String, trim: true, default: "FLASH SALE" },
+    flashSaleHeadline: { type: String, trim: true },
+    flashSaleEndsAt: { type: Date, index: true },
   },
   { timestamps: true },
 );
@@ -28,6 +32,13 @@ CouponSchema.index({ code: 1 }, { unique: true });
 CouponSchema.index({ active: 1, startDate: 1, expiryDate: 1 });
 CouponSchema.index({ applicableEvents: 1, active: 1 });
 CouponSchema.index({ applicableCategories: 1, active: 1 });
+CouponSchema.index({
+  flashSaleActive: 1,
+  active: 1,
+  startDate: 1,
+  expiryDate: 1,
+  flashSaleEndsAt: 1,
+});
 
 export interface ICoupon extends InferSchemaType<typeof CouponSchema> {}
 

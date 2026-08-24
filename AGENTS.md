@@ -17,7 +17,6 @@ Fixed technology stack — do not substitute any of these
 •  Database: MongoDB Atlas via Mongoose.
 •  Payments: Razorpay.
 •  Media/image storage: Cloudinary.
-•  Maps: Google Maps API (for venue location display).
 •  Deployment target: Vercel (app) + MongoDB Atlas (data) + Firebase (auth).
 
 Non-negotiable engineering principles

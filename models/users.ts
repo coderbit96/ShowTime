@@ -16,6 +16,11 @@ const UserSchema = new Schema(
       index: true,
     },
     city: { type: Schema.Types.ObjectId, ref: "City", index: true },
+    hiddenBookingIds: {
+      type: [Schema.Types.ObjectId],
+      ref: "Booking",
+      default: [],
+    },
     active: { type: Boolean, default: true, index: true },
     lastLoginAt: { type: Date },
   },

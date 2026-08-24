@@ -1,23 +1,20 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import {
-  CalendarDays,
-  ChevronDown,
-  Menu,
-  Search,
-  Ticket,
-  UserRound,
-  X,
-} from "lucide-react";
+import { ChevronDown, Menu, Search, Ticket, UserRound, X } from "lucide-react";
+import { GlobalSearch } from "@/components/search";
 import { CitySelector } from "./city-selector";
+import { NotificationMenu } from "./notification-menu";
 
 const navLinks = [
-  { label: "Movies", href: "#" },
-  { label: "Events", href: "#" },
-  { label: "Sports", href: "#" },
-  { label: "Experiences", href: "#" },
+  { label: "Movies", href: "/#recommended-movies" },
+  { label: "Events", href: "/#live-events" },
+  { label: "Sports", href: "/#sports" },
+  { label: "Plays", href: "/#live-events" },
+  { label: "Activities", href: "/#weekend-experiences" },
+  { label: "Offers", href: "/#under-499" },
 ];
 
 export function SiteHeader() {
@@ -25,13 +22,18 @@ export function SiteHeader() {
   const [accountOpen, setAccountOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/92 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-white/10 bg-background/78 shadow-[0_10px_38px_rgba(0,0,0,0.28)] backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:px-6">
-        <Link href="/" className="flex shrink-0 items-center gap-2">
-          <span className="grid size-9 place-items-center rounded-md bg-primary text-sm font-black text-primary-foreground">
-            ST
-          </span>
-          <span className="hidden text-lg font-semibold text-foreground sm:block">
+        <Link href="/" className="group flex shrink-0 items-center gap-2">
+          <Image
+            src="/show-time-logo.svg"
+            alt="Show Time"
+            width={36}
+            height={36}
+            priority
+            className="size-9 drop-shadow-[0_0_18px_rgba(6,182,212,0.28)] transition-transform group-hover:scale-105"
+          />
+          <span className="hidden text-lg font-semibold text-foreground group-hover:text-secondary sm:block">
             Show Time
           </span>
         </Link>
@@ -41,31 +43,25 @@ export function SiteHeader() {
             <Link
               key={link.label}
               href={link.href}
-              className="rounded-md px-3 py-2 text-sm font-medium text-muted transition-colors hover:bg-surface-muted hover:text-foreground"
+              className="rounded-md px-3 py-2 text-sm font-medium text-muted hover:bg-white/[0.06] hover:text-foreground hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]"
             >
               {link.label}
             </Link>
           ))}
         </nav>
 
-        <div className="ml-auto hidden min-w-0 max-w-xl flex-1 items-center gap-2 rounded-md border border-border bg-surface px-3 py-2 md:flex lg:ml-4">
-          <Search className="size-4 shrink-0 text-muted" aria-hidden="true" />
-          <button
-            type="button"
-            className="min-w-0 flex-1 truncate text-left text-sm text-muted"
-          >
-            Search movies, events, venues
-          </button>
-          <CalendarDays className="size-4 shrink-0 text-primary" />
+        <div className="premium-panel ml-auto hidden min-w-0 max-w-xl flex-1 rounded-md px-3 py-1 md:block lg:ml-4">
+          <GlobalSearch />
         </div>
 
         <div className="hidden items-center gap-2 md:flex">
           <CitySelector />
+          <NotificationMenu />
           <div className="relative">
             <button
               type="button"
               onClick={() => setAccountOpen((current) => !current)}
-              className="inline-flex h-10 items-center gap-2 rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-foreground"
+              className="premium-button h-10 gap-2 px-3 text-sm font-semibold"
               aria-expanded={accountOpen}
             >
               <UserRound className="size-4" aria-hidden="true" />
@@ -74,18 +70,25 @@ export function SiteHeader() {
             </button>
 
             {accountOpen ? (
-              <div className="absolute right-0 top-12 z-40 w-56 rounded-md border border-border bg-surface p-2 shadow-xl shadow-primary/10">
+              <div className="premium-panel absolute right-0 top-12 z-40 w-56 rounded-md p-2">
+                <Link
+                  href="/account"
+                  onClick={() => setAccountOpen(false)}
+                  className="block rounded-md px-3 py-2.5 text-sm font-medium hover:bg-white/[0.07] hover:text-secondary"
+                >
+                  My account
+                </Link>
                 <Link
                   href="/auth/login"
                   onClick={() => setAccountOpen(false)}
-                  className="block rounded-md px-3 py-2.5 text-sm font-medium transition-colors hover:bg-surface-muted"
+                  className="block rounded-md px-3 py-2.5 text-sm font-medium hover:bg-white/[0.07] hover:text-secondary"
                 >
                   Login
                 </Link>
                 <Link
                   href="/auth/register"
                   onClick={() => setAccountOpen(false)}
-                  className="block rounded-md px-3 py-2.5 text-sm font-medium transition-colors hover:bg-surface-muted"
+                  className="block rounded-md px-3 py-2.5 text-sm font-medium hover:bg-white/[0.07] hover:text-secondary"
                 >
                   Create account
                 </Link>
@@ -96,7 +99,7 @@ export function SiteHeader() {
 
         <button
           type="button"
-          className="ml-auto grid size-10 place-items-center rounded-md border border-border bg-surface md:hidden"
+          className="premium-button-secondary ml-auto grid size-10 place-items-center md:hidden"
           onClick={() => setMobileOpen((current) => !current)}
           aria-expanded={mobileOpen}
           aria-label="Menu"
@@ -110,17 +113,18 @@ export function SiteHeader() {
       </div>
 
       {mobileOpen ? (
-        <div className="border-t border-border bg-background px-4 py-4 md:hidden">
+        <div className="border-t border-white/10 bg-background/95 px-4 py-4 shadow-2xl shadow-black/40 backdrop-blur-xl md:hidden">
           <div className="flex flex-col gap-3">
-            <div className="flex items-center gap-2 rounded-md border border-border bg-surface px-3 py-2">
+            <Link
+              href="/search"
+              className="premium-panel flex items-center gap-2 rounded-md px-3 py-2"
+              onClick={() => setMobileOpen(false)}
+            >
               <Search className="size-4 text-muted" aria-hidden="true" />
-              <button
-                type="button"
-                className="min-w-0 flex-1 truncate text-left text-sm text-muted"
-              >
-                Search movies, events, venues
-              </button>
-            </div>
+              <span className="min-w-0 flex-1 truncate text-sm text-muted">
+                Search movies, artists, events, venues...
+              </span>
+            </Link>
 
             <CitySelector />
 
@@ -129,7 +133,7 @@ export function SiteHeader() {
                 <Link
                   key={link.label}
                   href={link.href}
-                  className="rounded-md px-3 py-2 text-sm font-medium text-muted transition-colors hover:bg-surface-muted hover:text-foreground"
+                  className="rounded-md px-3 py-2 text-sm font-medium text-muted hover:bg-white/[0.07] hover:text-foreground"
                 >
                   {link.label}
                 </Link>
@@ -139,14 +143,14 @@ export function SiteHeader() {
             <div className="grid grid-cols-2 gap-2">
               <Link
                 href="/auth/login"
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground"
+                className="premium-button h-10 gap-2 px-3 text-sm font-semibold"
               >
                 <Ticket className="size-4" aria-hidden="true" />
                 Login
               </Link>
               <Link
                 href="/auth/register"
-                className="inline-flex h-10 items-center justify-center rounded-md border border-border bg-surface px-3 text-sm font-medium text-foreground"
+                className="premium-button-secondary h-10 px-3 text-sm font-semibold"
               >
                 Register
               </Link>

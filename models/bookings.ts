@@ -19,9 +19,13 @@ const PricingBreakdownSchema = new Schema(
     basePrice: { type: Number, required: true, min: 0 },
     convenienceFee: { type: Number, required: true, min: 0, default: 0 },
     tax: { type: Number, required: true, min: 0, default: 0 },
+    subtotal: { type: Number, required: true, min: 0, default: 0 },
     discount: { type: Number, required: true, min: 0, default: 0 },
     coupon: { type: Schema.Types.ObjectId, ref: "Coupon" },
     total: { type: Number, required: true, min: 0 },
+    organizerShare: { type: Number, required: true, min: 0, default: 0 },
+    platformCommission: { type: Number, required: true, min: 0, default: 0 },
+    platformRevenue: { type: Number, required: true, min: 0, default: 0 },
     currency: { type: String, default: "INR" },
   },
   { _id: false },
@@ -39,6 +43,11 @@ const BookingSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "Show",
       required: true,
+      index: true,
+    },
+    groupBooking: {
+      type: Schema.Types.ObjectId,
+      ref: "GroupBooking",
       index: true,
     },
     seats: { type: [BookedSeatSchema], required: true },
@@ -76,6 +85,7 @@ BookingSchema.index(
   },
 );
 BookingSchema.index({ user: 1, createdAt: -1 });
+BookingSchema.index({ groupBooking: 1, status: 1 });
 BookingSchema.index({ show: 1, status: 1 });
 BookingSchema.index({ status: 1, createdAt: -1 });
 

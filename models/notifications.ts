@@ -17,6 +17,7 @@ const NotificationSchema = new Schema(
       required: true,
       index: true,
     },
+    eventKey: { type: String, trim: true },
     readAt: { type: Date },
     metadata: { type: Schema.Types.Mixed },
   },
@@ -24,6 +25,7 @@ const NotificationSchema = new Schema(
 );
 
 NotificationSchema.index({ user: 1, readAt: 1, createdAt: -1 });
+NotificationSchema.index({ eventKey: 1 }, { unique: true, sparse: true });
 NotificationSchema.index({ type: 1, createdAt: -1 });
 
 export interface INotification extends InferSchemaType<

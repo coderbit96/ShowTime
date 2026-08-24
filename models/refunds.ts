@@ -35,6 +35,16 @@ const RefundSchema = new Schema(
 );
 
 RefundSchema.index({ idempotencyKey: 1 }, { unique: true });
+RefundSchema.index(
+  { booking: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      status: { $in: ["REQUESTED", "APPROVED", "PROCESSING", "SUCCESS"] },
+    },
+    name: "unique_active_refund_per_booking",
+  },
+);
 RefundSchema.index({ booking: 1, status: 1 });
 RefundSchema.index({ status: 1, createdAt: -1 });
 RefundSchema.index({ adminApprover: 1, status: 1 });

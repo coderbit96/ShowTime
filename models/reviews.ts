@@ -11,6 +11,7 @@ const ReviewSchema = new Schema(
     },
     event: { type: Schema.Types.ObjectId, ref: "Event", index: true },
     movie: { type: Schema.Types.ObjectId, ref: "Movie", index: true },
+    venue: { type: Schema.Types.ObjectId, ref: "Venue", index: true },
     rating: { type: Number, required: true, min: 1, max: 5, index: true },
     comment: { type: String, trim: true },
     status: {
@@ -25,8 +26,10 @@ const ReviewSchema = new Schema(
 
 ReviewSchema.index({ event: 1, status: 1, createdAt: -1 });
 ReviewSchema.index({ movie: 1, status: 1, createdAt: -1 });
+ReviewSchema.index({ venue: 1, status: 1, createdAt: -1 });
 ReviewSchema.index({ user: 1, event: 1 }, { unique: true, sparse: true });
 ReviewSchema.index({ user: 1, movie: 1 }, { unique: true, sparse: true });
+ReviewSchema.index({ user: 1, venue: 1 }, { unique: true, sparse: true });
 
 export interface IReview extends InferSchemaType<typeof ReviewSchema> {}
 

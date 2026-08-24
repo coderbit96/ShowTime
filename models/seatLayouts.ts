@@ -40,7 +40,6 @@ const SeatLayoutSchema = new Schema(
 );
 
 SeatLayoutSchema.index({ name: 1 }, { unique: true });
-SeatLayoutSchema.index({ active: 1 });
 
 export interface ISeatLayout extends InferSchemaType<typeof SeatLayoutSchema> {}
 

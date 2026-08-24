@@ -12,7 +12,8 @@ const PersonCreditSchema = new Schema(
 
 const MovieSchema = new Schema(
   {
-    title: { type: String, required: true, trim: true, index: "text" },
+    title: { type: String, required: true, trim: true },
+    slug: { type: String, required: true, trim: true, lowercase: true },
     poster: { type: String, required: true, trim: true },
     banner: { type: String, trim: true },
     description: { type: String, required: true, trim: true },
@@ -30,9 +31,17 @@ const MovieSchema = new Schema(
   { timestamps: true },
 );
 
-MovieSchema.index({ title: "text", description: "text", genre: "text" });
+MovieSchema.index(
+  {
+    title: "text",
+    description: "text",
+    genre: "text",
+    "cast.name": "text",
+  },
+  { language_override: "textLanguage" },
+);
+MovieSchema.index({ slug: 1 }, { unique: true });
 MovieSchema.index({ releaseDate: -1, active: 1 });
-MovieSchema.index({ language: 1, genre: 1 });
 
 export interface IMovie extends InferSchemaType<typeof MovieSchema> {}
 

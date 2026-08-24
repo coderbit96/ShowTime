@@ -30,11 +30,11 @@ export function NewsletterForm() {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="you@example.com"
-          className="h-11 min-w-0 flex-1 rounded-md border border-border bg-surface px-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted focus:border-primary"
+          className="h-11 min-w-0 flex-1 rounded-md border border-white/10 bg-background/70 px-3 text-sm text-foreground outline-none placeholder:text-muted focus:border-secondary"
         />
         <button
           type="submit"
-          className="grid size-11 shrink-0 place-items-center rounded-md bg-accent text-accent-foreground transition-colors hover:bg-warning"
+          className="premium-button grid size-11 shrink-0 place-items-center"
           aria-label="Subscribe"
         >
           <Send className="size-4" aria-hidden="true" />

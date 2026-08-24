@@ -1,31 +1,47 @@
 import Link from "next/link";
-import { NewsletterForm } from "./newsletter-form";
 
 const footerGroups = [
   {
     title: "Explore",
-    links: ["Movies", "Concerts", "Sports", "Workshops"],
+    links: [
+      { label: "Movies", href: "/#recommended-movies" },
+      { label: "Concerts", href: "/#concerts" },
+      { label: "Sports", href: "/#sports" },
+      { label: "Experiences", href: "/#weekend-experiences" },
+    ],
   },
   {
     title: "Company",
-    links: ["About", "Careers", "Press", "Contact"],
+    links: [
+      { label: "About", href: "/about" },
+      { label: "Careers", href: "/careers" },
+      { label: "Press", href: "/press" },
+      { label: "Contact", href: "/contact" },
+    ],
   },
   {
     title: "Support",
-    links: ["Help Center", "Cancellation", "Gift Cards", "Safety"],
+    links: [
+      { label: "Help Center", href: "/help" },
+      { label: "Cancellation", href: "/cancellation" },
+      { label: "Gift Cards", href: "/gift-cards" },
+      { label: "Safety", href: "/safety" },
+    ],
   },
 ];
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-primary/10 bg-primary text-primary-foreground">
+    <footer className="border-t border-white/10 bg-[linear-gradient(180deg,#151522,#0B0B14)] text-primary-foreground">
       <div className="mx-auto grid max-w-7xl gap-10 px-6 py-12 md:grid-cols-[1.1fr_2fr_1.2fr]">
         <div>
-          <Link href="/" className="inline-flex items-center gap-2">
-            <span className="grid size-9 place-items-center rounded-md bg-accent text-sm font-black text-accent-foreground">
+          <Link href="/" className="group inline-flex items-center gap-2">
+            <span className="grid size-9 place-items-center rounded-md bg-accent text-sm font-black text-accent-foreground shadow-[0_0_24px_rgba(244,63,94,0.35)] group-hover:bg-secondary">
               ST
             </span>
-            <span className="text-lg font-semibold">Show Time</span>
+            <span className="text-lg font-semibold group-hover:text-secondary">
+              Show Time
+            </span>
           </Link>
           <p className="mt-4 max-w-xs text-sm leading-6 text-primary-foreground/72">
             A quieter, sharper way to discover movies, shows, games, and local
@@ -36,17 +52,17 @@ export function SiteFooter() {
         <div className="grid gap-8 sm:grid-cols-3">
           {footerGroups.map((group) => (
             <div key={group.title}>
-              <h2 className="text-sm font-semibold text-accent">
+              <h2 className="text-sm font-semibold text-secondary">
                 {group.title}
               </h2>
               <ul className="mt-4 space-y-3">
                 {group.links.map((link) => (
-                  <li key={link}>
+                  <li key={link.label}>
                     <Link
-                      href="#"
-                      className="text-sm text-primary-foreground/72 transition-colors hover:text-primary-foreground"
+                      href={link.href}
+                      className="text-sm text-primary-foreground/72 hover:text-secondary"
                     >
-                      {link}
+                      {link.label}
                     </Link>
                   </li>
                 ))}
@@ -55,11 +71,17 @@ export function SiteFooter() {
           ))}
         </div>
 
-        <NewsletterForm />
+        <div>
+          <h2 className="text-sm font-semibold text-secondary">Show Time</h2>
+          <p className="mt-4 max-w-xs text-sm leading-6 text-primary-foreground/72">
+            Movies, live events, sports, and small reasons to spend a night out
+            well.
+          </p>
+        </div>
       </div>
       <div className="border-t border-primary-foreground/10 px-6 py-4">
         <div className="mx-auto flex max-w-7xl flex-col gap-2 text-xs text-primary-foreground/60 sm:flex-row sm:items-center sm:justify-between">
-          <p>© 2026 Show Time. All rights reserved.</p>
+          <p>(c) 2026 Show Time. All rights reserved.</p>
           <p>Built for fast, secure booking flows.</p>
         </div>
       </div>

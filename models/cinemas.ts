@@ -14,6 +14,11 @@ const CinemaSchema = new Schema(
     },
     chain: { type: String, trim: true, index: true },
     amenities: { type: [String], default: [] },
+    contact: {
+      name: { type: String, trim: true },
+      email: { type: String, trim: true, lowercase: true },
+      phone: { type: String, trim: true },
+    },
     location: {
       type: { type: String, enum: ["Point"], default: "Point" },
       coordinates: { type: [Number], required: true },

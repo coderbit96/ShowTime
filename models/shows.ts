@@ -57,6 +57,10 @@ const ShowSchema = new Schema(
     startTime: { type: Date, required: true, index: true },
     endTime: { type: Date, required: true },
     pricing: { type: [PriceSchema], required: true },
+    bookingLimits: {
+      maxSeatsPerBooking: { type: Number, required: true, min: 1, default: 10 },
+      maxBookings: { type: Number, min: 1 },
+    },
     seatAvailability: { type: [SeatAvailabilitySchema], required: true },
     bookingStatus: {
       type: String,
@@ -70,6 +74,13 @@ const ShowSchema = new Schema(
 );
 
 ShowSchema.index({ screen: 1, startTime: 1 }, { unique: true });
+ShowSchema.index({
+  screen: 1,
+  startTime: 1,
+  endTime: 1,
+  bookingStatus: 1,
+  active: 1,
+});
 ShowSchema.index({ city: 1, category: 1, date: 1, bookingStatus: 1 });
 ShowSchema.index({ movie: 1, city: 1, date: 1 });
 ShowSchema.index({ event: 1, city: 1, date: 1 });

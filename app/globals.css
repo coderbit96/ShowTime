@@ -1,20 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f4f7f2;
-  --foreground: #10201c;
-  --surface: #fffdf6;
-  --surface-muted: #e7eee6;
-  --border: #cfdbd1;
-  --primary: #12382f;
-  --primary-foreground: #f8fff3;
-  --accent: #c9f56f;
-  --accent-foreground: #13201b;
-  --warning: #efb84a;
-  --berry: #a6475c;
-  --mist: #dce8dd;
-  --muted: #607069;
-  --ring: #8fbd65;
+  --background: #0b0b14;
+  --foreground: #f8fafc;
+  --surface: #151522;
+  --surface-muted: #202033;
+  --border: #33334d;
+  --primary: #7c3aed;
+  --primary-foreground: #f8fafc;
+  --secondary: #06b6d4;
+  --secondary-foreground: #06232b;
+  --accent: #f43f5e;
+  --accent-foreground: #fff1f2;
+  --warning: #fbbf24;
+  --berry: #f43f5e;
+  --mist: #27273a;
+  --muted: #94a3b8;
+  --ring: #06b6d4;
 }
 
 @theme inline {
@@ -25,6 +27,8 @@
   --color-border: var(--border);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-warning: var(--warning);
@@ -36,7 +40,10 @@
 }
 
 body {
-  background: var(--background);
+  background:
+    linear-gradient(180deg, rgba(124, 58, 237, 0.1), transparent 420px),
+    linear-gradient(115deg, rgba(6, 182, 212, 0.07), transparent 48%),
+    var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   text-rendering: optimizeLegibility;
@@ -52,4 +59,136 @@ a,
 input,
 select {
   outline-color: var(--ring);
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:not(:disabled),
+a {
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease,
+    opacity 160ms ease;
+}
+
+button:not(:disabled):active,
+a:active {
+  transform: translateY(1px) scale(0.99);
+}
+
+input,
+select,
+textarea {
+  color-scheme: dark;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0b0b14;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #33334d;
+  border: 2px solid #0b0b14;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #06b6d4;
+}
+
+@layer components {
+  .premium-panel {
+    border: 1px solid color-mix(in srgb, var(--border) 78%, white 8%);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.065), transparent),
+      rgba(21, 21, 34, 0.88);
+    box-shadow:
+      0 18px 60px rgba(0, 0, 0, 0.34),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(18px);
+  }
+
+  .premium-card {
+    border: 1px solid color-mix(in srgb, var(--border) 86%, white 6%);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 42%),
+      var(--surface);
+    box-shadow: 0 14px 38px rgba(0, 0, 0, 0.28);
+  }
+
+  .premium-card:hover {
+    border-color: color-mix(in srgb, var(--secondary) 68%, white 8%);
+    box-shadow:
+      0 22px 60px rgba(0, 0, 0, 0.36),
+      0 0 0 1px rgba(6, 182, 212, 0.1),
+      0 0 34px rgba(124, 58, 237, 0.16);
+  }
+
+  .premium-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+    background:
+      linear-gradient(
+        135deg,
+        rgba(244, 63, 94, 0.96),
+        rgba(124, 58, 237, 0.96)
+      ),
+      var(--primary);
+    color: var(--primary-foreground);
+    box-shadow:
+      0 14px 34px rgba(124, 58, 237, 0.34),
+      inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  }
+
+  .premium-button:hover {
+    transform: translateY(-1px);
+    box-shadow:
+      0 18px 44px rgba(244, 63, 94, 0.28),
+      0 0 34px rgba(6, 182, 212, 0.16),
+      inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  }
+
+  .premium-button-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(6, 182, 212, 0.42);
+    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--foreground);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  .premium-button-secondary:hover {
+    border-color: rgba(6, 182, 212, 0.78);
+    background: rgba(6, 182, 212, 0.13);
+    color: var(--foreground);
+    transform: translateY(-1px);
+  }
+
+  .premium-chip {
+    border: 1px solid rgba(6, 182, 212, 0.32);
+    border-radius: 0.5rem;
+    background: rgba(11, 11, 20, 0.64);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(14px);
+  }
 }

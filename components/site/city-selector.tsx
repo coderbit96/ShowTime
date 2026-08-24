@@ -27,7 +27,7 @@ export function CitySelector() {
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="inline-flex h-10 max-w-44 items-center gap-2 rounded-md border border-border bg-surface px-3 text-sm font-medium text-foreground transition-colors hover:border-primary"
+        className="premium-button-secondary h-10 max-w-44 gap-2 px-3 text-sm font-medium"
         aria-expanded={open}
       >
         <MapPin className="size-4 text-primary" aria-hidden="true" />
@@ -36,11 +36,11 @@ export function CitySelector() {
       </button>
 
       {open ? (
-        <div className="absolute left-0 top-12 z-40 w-72 rounded-md border border-border bg-surface p-2 shadow-xl shadow-primary/10">
+        <div className="premium-panel absolute left-0 top-12 z-40 w-72 rounded-md p-2">
           <button
             type="button"
             onClick={() => chooseCity("mumbai")}
-            className="flex w-full items-center gap-3 rounded-md px-3 py-3 text-left text-sm font-medium transition-colors hover:bg-surface-muted"
+            className="flex w-full items-center gap-3 rounded-md px-3 py-3 text-left text-sm font-medium hover:bg-white/[0.07]"
           >
             <LocateFixed className="size-4 text-berry" aria-hidden="true" />
             Detect my location
@@ -53,7 +53,7 @@ export function CitySelector() {
               type="button"
               key={city.id}
               onClick={() => chooseCity(city.id)}
-              className="flex w-full items-center justify-between rounded-md px-3 py-2.5 text-left text-sm transition-colors hover:bg-surface-muted"
+              className="flex w-full items-center justify-between rounded-md px-3 py-2.5 text-left text-sm hover:bg-white/[0.07]"
             >
               <span>{city.name}</span>
               {city.id === selectedCity.id ? (

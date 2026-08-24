@@ -17,6 +17,7 @@ const OrganizerSchema = new Schema(
       index: true,
     },
     payoutEnabled: { type: Boolean, default: false },
+    canCreateVenues: { type: Boolean, default: false, index: true },
     active: { type: Boolean, default: true, index: true },
   },
   { timestamps: true },
@@ -25,6 +26,7 @@ const OrganizerSchema = new Schema(
 OrganizerSchema.index({ user: 1 }, { unique: true });
 OrganizerSchema.index({ slug: 1 }, { unique: true });
 OrganizerSchema.index({ verificationStatus: 1, active: 1 });
+OrganizerSchema.index({ verificationStatus: 1, canCreateVenues: 1, active: 1 });
 
 export interface IOrganizer extends InferSchemaType<typeof OrganizerSchema> {}
 

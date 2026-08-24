@@ -8,17 +8,27 @@
     "start": "next start",
     "lint": "eslint",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "test:show-scheduling": "tsx scripts/test-show-scheduling-concurrency.ts",
+    "test:seat-locks": "tsx scripts/test-show-scheduling-concurrency.ts",
+    "test:booking-flow": "tsx scripts/test-show-scheduling-concurrency.ts",
+    "test:stage-f": "tsx scripts/test-stage-f-suite.ts",
+    "test:launch-suite": "npm run test:booking-flow && npm run test:stage-f",
+    "seed:demo-roles": "tsx scripts/seed-demo-roles.ts",
+    "db:migrate:movie-text-index": "tsx scripts/migrate-movie-text-index.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
-    "cloudinary": "^2.10.0",
+    "@zxing/browser": "^0.2.1",
+    "cloudinary": "^2.10.1",
     "firebase": "^12.17.1",
     "firebase-admin": "^14.3.0",
     "framer-motion": "^13.1.0",
+    "html-to-image": "^1.11.13",
     "lucide-react": "^1.33.0",
     "mongoose": "^9.9.3",
     "next": "16.3.1",
+    "qrcode": "^1.5.4",
     "razorpay": "^2.9.8",
     "react": "19.2.8",
     "react-dom": "19.2.8",
@@ -29,12 +39,14 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.1",
     "prettier": "^3.9.6",
     "tailwindcss": "^4",
+    "tsx": "^4.23.12",
     "typescript": "^5"
   }
 }

@@ -13,6 +13,29 @@ const ScreenSchema = new Schema(
       index: true,
     },
     capacity: { type: Number, required: true, min: 1 },
+    rowConfiguration: {
+      type: [
+        new Schema(
+          {
+            label: { type: String, required: true, trim: true },
+            seatCount: { type: Number, required: true, min: 1 },
+            category: {
+              type: String,
+              enum: ["REGULAR", "PREMIUM", "RECLINER", "VIP"],
+              required: true,
+            },
+          },
+          { _id: false },
+        ),
+      ],
+      required: true,
+    },
+    seatCategories: {
+      type: [String],
+      enum: ["REGULAR", "PREMIUM", "RECLINER", "VIP"],
+      required: true,
+    },
+    scheduleVersion: { type: Number, default: 0 },
     active: { type: Boolean, default: true, index: true },
   },
   { timestamps: true },

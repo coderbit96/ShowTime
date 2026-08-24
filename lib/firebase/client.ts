@@ -1,5 +1,6 @@
 import { getAnalytics, isSupported, type Analytics } from "firebase/analytics";
 import { getApps, initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? "missing-api-key",
@@ -18,6 +19,7 @@ const firebaseConfig = {
 };
 
 export const firebaseApp = getApps()[0] ?? initializeApp(firebaseConfig);
+export const firebaseAuth = getAuth(firebaseApp);
 
 let analyticsPromise: Promise<Analytics | null> | null = null;
 
