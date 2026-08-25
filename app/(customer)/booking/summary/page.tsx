@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AuthRequired } from "@/components/auth/auth-required";
 import { BookingSummary } from "@/components/booking/booking-summary";
 
 export const metadata: Metadata = {
@@ -20,7 +21,9 @@ export default async function BookingSummaryPage({
     );
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-5 py-8 text-foreground sm:px-6">
-      <BookingSummary showId={showId} lockId={lockId} groupId={groupId} />
+      <AuthRequired>
+        <BookingSummary showId={showId} lockId={lockId} groupId={groupId} />
+      </AuthRequired>
     </main>
   );
 }

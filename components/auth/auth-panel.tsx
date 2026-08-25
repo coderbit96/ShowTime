@@ -9,11 +9,13 @@ import {
   signInWithPopup,
   updateProfile,
 } from "firebase/auth";
-import { LoaderCircle, Mail, UserPlus } from "lucide-react";
+import { Eye, EyeOff, LoaderCircle, Mail, UserPlus } from "lucide-react";
 import { firebaseAuth } from "@/lib/firebase/client";
 
 type AuthMode = "login" | "register";
 type AuthIntent = "CUSTOMER" | "ORGANIZER" | "ADMIN";
+const organizerPendingMessage =
+  "Your organizer account is not approved yet. Please wait some time.";
 
 export function AuthPanel({
   mode,
@@ -24,11 +26,14 @@ export function AuthPanel({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [role, setRole] = useState<"CUSTOMER" | "ORGANIZER">(
-    intent === "ORGANIZER" ? "ORGANIZER" : "CUSTOMER",
-  );
+  const [currentMode, setCurrentMode] = useState<AuthMode>(mode);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(
+    searchParams.get("notice") === "approval-pending"
+      ? organizerPendingMessage
+      : "",
+  );
+  const [showPassword, setShowPassword] = useState(false);
 
   const redirectTo =
     searchParams.get("returnTo") ||
@@ -50,7 +55,11 @@ export function AuthPanel({
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ role: profileRole, ...body }),
+      body: JSON.stringify({
+        role: profileRole,
+        expectedRole: intent === "CUSTOMER" ? profileRole : intent,
+        ...body,
+      }),
     });
     const payload = (await response.json()) as {
       user?: { role: string };
@@ -75,6 +84,18 @@ export function AuthPanel({
     }
   };
 
+  const showAuthError = async (error: unknown) => {
+    const nextMessage =
+      error instanceof Error ? error.message : "Authentication failed.";
+    if (
+      intent === "ORGANIZER" &&
+      nextMessage.toLowerCase().includes("not approved")
+    ) {
+      await firebaseAuth.signOut();
+    }
+    setMessage(nextMessage);
+  };
+
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setLoading(true);
@@ -85,29 +106,30 @@ export function AuthPanel({
     const name = String(form.get("name") ?? "");
     const phone = String(form.get("phone") ?? "");
     const organizationName = String(form.get("organizationName") ?? "");
+    const profileRole = intent === "ORGANIZER" ? "ORGANIZER" : "CUSTOMER";
     try {
-      if (mode === "register") {
+      if (currentMode === "register") {
         const credential = await createUserWithEmailAndPassword(
           firebaseAuth,
           email,
           password,
         );
         if (name) await updateProfile(credential.user, { displayName: name });
-        const user = await syncProfile(role, { name, phone, organizationName });
+        const user = await syncProfile(profileRole, {
+          name,
+          phone,
+          organizationName,
+        });
         assertAllowedRole(user?.role);
         router.push(destinationForRole(user?.role));
         return;
       }
       await signInWithEmailAndPassword(firebaseAuth, email, password);
-      const user = await syncProfile(
-        intent === "ORGANIZER" ? "ORGANIZER" : role,
-      );
+      const user = await syncProfile(profileRole);
       assertAllowedRole(user?.role);
       router.push(destinationForRole(user?.role));
     } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : "Authentication failed.",
-      );
+      await showAuthError(error);
     } finally {
       setLoading(false);
     }
@@ -119,13 +141,13 @@ export function AuthPanel({
     try {
       await signInWithPopup(firebaseAuth, new GoogleAuthProvider());
       const user = await syncProfile(
-        intent === "ORGANIZER" ? "ORGANIZER" : role,
+        intent === "ORGANIZER" ? "ORGANIZER" : "CUSTOMER",
       );
       assertAllowedRole(user?.role);
       router.push(destinationForRole(user?.role));
     } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : "Google login failed.",
+      await showAuthError(
+        error instanceof Error ? error : new Error("Google login failed."),
       );
     } finally {
       setLoading(false);
@@ -136,41 +158,35 @@ export function AuthPanel({
     intent === "ADMIN"
       ? "Admin login"
       : intent === "ORGANIZER"
-        ? "Organizer login"
-        : mode === "register"
+        ? currentMode === "register"
+          ? "Organizer registration"
+          : "Organizer login"
+        : currentMode === "register"
           ? "Create your account"
           : "Welcome back";
 
   return (
     <main className="min-h-screen bg-background px-5 py-10 text-foreground sm:px-6">
+      {message ? (
+        <div
+          role="status"
+          className="fixed right-5 top-5 z-50 max-w-sm rounded-md border border-secondary/40 bg-surface px-4 py-3 text-sm font-semibold text-foreground shadow-2xl shadow-secondary/10"
+        >
+          {message}
+        </div>
+      ) : null}
       <section className="mx-auto max-w-md rounded-md border border-border bg-surface p-5 shadow-xl shadow-black/10">
         <p className="text-sm font-semibold text-secondary">Show Time</p>
         <h1 className="mt-2 text-3xl font-semibold">{title}</h1>
         {intent !== "CUSTOMER" ? (
           <p className="mt-2 text-sm leading-6 text-muted">
-            Use your approved {intent.toLowerCase()} account to continue.
+            {intent === "ORGANIZER" && currentMode === "register"
+              ? "Create your organizer profile. Admin approval is required before dashboard access."
+              : `Use your approved ${intent.toLowerCase()} account to continue.`}
           </p>
         ) : null}
         <form onSubmit={submit} className="mt-6 grid gap-3">
-          {intent === "CUSTOMER" ? (
-            <div className="grid grid-cols-2 gap-2 rounded-md border border-border bg-background p-1">
-              {(["CUSTOMER", "ORGANIZER"] as const).map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setRole(value)}
-                  className={`h-9 rounded-sm text-xs font-semibold ${
-                    role === value
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted"
-                  }`}
-                >
-                  {value === "CUSTOMER" ? "Customer" : "Organizer"}
-                </button>
-              ))}
-            </div>
-          ) : null}
-          {mode === "register" ? (
+          {currentMode === "register" ? (
             <>
               <input
                 name="name"
@@ -183,7 +199,7 @@ export function AuthPanel({
                 placeholder="Phone"
                 className="h-11 rounded-md border border-border bg-background px-3 text-sm"
               />
-              {role === "ORGANIZER" ? (
+              {intent === "ORGANIZER" ? (
                 <input
                   name="organizationName"
                   required
@@ -200,44 +216,89 @@ export function AuthPanel({
             placeholder="Email"
             className="h-11 rounded-md border border-border bg-background px-3 text-sm"
           />
-          <input
-            name="password"
-            required
-            type="password"
-            minLength={6}
-            placeholder="Password"
-            className="h-11 rounded-md border border-border bg-background px-3 text-sm"
-          />
+          <div className="relative">
+            <input
+              name="password"
+              required
+              type={showPassword ? "text" : "password"}
+              minLength={6}
+              placeholder="Password"
+              className="h-11 w-full rounded-md border border-border bg-background px-3 pr-12 text-sm"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((current) => !current)}
+              className="absolute right-2 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-md text-muted hover:bg-surface-muted hover:text-foreground"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              title={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? (
+                <EyeOff className="size-4" aria-hidden="true" />
+              ) : (
+                <Eye className="size-4" aria-hidden="true" />
+              )}
+            </button>
+          </div>
           <button
             disabled={loading}
             className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-accent px-4 text-sm font-semibold text-accent-foreground disabled:opacity-50"
           >
             {loading ? (
               <LoaderCircle className="size-4 animate-spin" />
-            ) : mode === "register" ? (
+            ) : currentMode === "register" ? (
               <UserPlus className="size-4" />
             ) : (
               <Mail className="size-4" />
             )}
-            {mode === "register" ? "Create account" : "Login"}
+            {currentMode === "register" ? "Create account" : "Login"}
           </button>
         </form>
-        <button
-          type="button"
-          onClick={() => void googleLogin()}
-          disabled={loading}
-          className="mt-3 h-11 w-full rounded-md border border-border text-sm font-semibold"
-        >
-          Continue with Google
-        </button>
-        {message ? (
-          <p className="mt-4 rounded-md border border-secondary/40 bg-secondary/10 p-3 text-sm">
-            {message}
-          </p>
+        {intent !== "ADMIN" ? (
+          <button
+            type="button"
+            onClick={() => void googleLogin()}
+            disabled={loading}
+            className="mt-3 h-11 w-full rounded-md border border-border text-sm font-semibold"
+          >
+            Continue with Google
+          </button>
         ) : null}
         <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted">
-          {mode !== "login" ? <a href="/auth/login">Login</a> : null}
-          {mode !== "register" ? <a href="/auth/register">Register</a> : null}
+          {intent === "ORGANIZER" ? (
+            <>
+              {currentMode !== "login" ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCurrentMode("login");
+                    setMessage("");
+                  }}
+                  className="hover:text-foreground"
+                >
+                  Login
+                </button>
+              ) : null}
+              {currentMode !== "register" ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCurrentMode("register");
+                    setMessage("");
+                  }}
+                  className="hover:text-foreground"
+                >
+                  Register
+                </button>
+              ) : null}
+            </>
+          ) : (
+            <>
+              {currentMode !== "login" ? <a href="/auth/login">Login</a> : null}
+              {currentMode !== "register" ? (
+                <a href="/auth/register">Register</a>
+              ) : null}
+            </>
+          )}
         </div>
       </section>
     </main>

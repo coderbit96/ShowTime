@@ -3,8 +3,8 @@ import { Suspense } from "react";
 import { AuthPanel } from "@/components/auth/auth-panel";
 
 export const metadata: Metadata = {
-  title: "Organizer Login | Show Time",
-  description: "Login to the Show Time organizer dashboard.",
+  title: "Organizer Login & Register | Show Time",
+  description: "Login or register for the Show Time organizer dashboard.",
 };
 
 export default function OrganizerIndexPage() {

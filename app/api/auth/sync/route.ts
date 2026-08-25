@@ -7,6 +7,7 @@ import { Organizer, User } from "@/models";
 
 const syncSchema = z.object({
   role: z.enum(["CUSTOMER", "ORGANIZER"]).default("CUSTOMER"),
+  expectedRole: z.enum(["CUSTOMER", "ORGANIZER", "ADMIN"]).optional(),
   name: z.string().trim().min(2).max(100).optional(),
   phone: z.string().trim().max(30).optional(),
   organizationName: z.string().trim().min(2).max(160).optional(),
@@ -37,6 +38,44 @@ export async function POST(request: NextRequest) {
     );
   await connectToDatabase();
   const role = parsed.data.role;
+  const expectedRole = parsed.data.expectedRole;
+
+  if (expectedRole === "ADMIN") {
+    const adminUser = await User.findOneAndUpdate(
+      {
+        $or: [{ firebaseUid: decoded.uid }, { email: decoded.email }],
+        role: "ADMIN",
+        active: true,
+      },
+      {
+        $set: {
+          firebaseUid: decoded.uid,
+          email: decoded.email,
+          name: parsed.data.name ?? decoded.name ?? decoded.email.split("@")[0],
+          avatar: decoded.picture,
+          lastLoginAt: new Date(),
+        },
+      },
+      { returnDocument: "after" },
+    ).lean();
+
+    if (!adminUser) {
+      return NextResponse.json(
+        { error: "This login is only for Admin accounts." },
+        { status: 403 },
+      );
+    }
+
+    return NextResponse.json({
+      user: {
+        id: adminUser._id.toString(),
+        name: adminUser.name,
+        email: adminUser.email,
+        role: adminUser.role,
+      },
+    });
+  }
+
   const user = await User.findOneAndUpdate(
     { firebaseUid: decoded.uid },
     {
@@ -56,10 +95,21 @@ export async function POST(request: NextRequest) {
     { upsert: true, returnDocument: "after" },
   ).lean();
 
+  if (expectedRole && user.role !== expectedRole) {
+    return NextResponse.json(
+      {
+        error: `This login is only for ${expectedRole.toLowerCase()} accounts.`,
+      },
+      { status: 403 },
+    );
+  }
+
+  let organizerStatus: string | undefined;
+
   if (role === "ORGANIZER") {
     const organizationName =
       parsed.data.organizationName ?? `${user.name}'s Organization`;
-    await Organizer.findOneAndUpdate(
+    const organizer = await Organizer.findOneAndUpdate(
       { user: user._id },
       {
         $setOnInsert: {
@@ -75,6 +125,21 @@ export async function POST(request: NextRequest) {
       },
       { upsert: true, returnDocument: "after" },
     ).lean();
+
+    organizerStatus = organizer?.verificationStatus;
+
+    if (
+      expectedRole === "ORGANIZER" &&
+      organizer?.verificationStatus !== "VERIFIED"
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Your organizer account is not approved yet. Please wait some time.",
+        },
+        { status: 403 },
+      );
+    }
   }
 
   return NextResponse.json({
@@ -83,6 +148,7 @@ export async function POST(request: NextRequest) {
       name: user.name,
       email: user.email,
       role: user.role,
+      organizerStatus,
     },
   });
 }

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 const footerGroups = [
@@ -36,9 +37,13 @@ export function SiteFooter() {
       <div className="mx-auto grid max-w-7xl gap-10 px-6 py-12 md:grid-cols-[1.1fr_2fr_1.2fr]">
         <div>
           <Link href="/" className="group inline-flex items-center gap-2">
-            <span className="grid size-9 place-items-center rounded-md bg-accent text-sm font-black text-accent-foreground shadow-[0_0_24px_rgba(244,63,94,0.35)] group-hover:bg-secondary">
-              ST
-            </span>
+            <Image
+              src="/show-time-logo.svg"
+              alt="Show Time"
+              width={44}
+              height={44}
+              className="size-11 drop-shadow-[0_0_22px_rgba(6,182,212,0.32)] transition-transform group-hover:scale-105"
+            />
             <span className="text-lg font-semibold group-hover:text-secondary">
               Show Time
             </span>

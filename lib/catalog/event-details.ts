@@ -32,6 +32,7 @@ type DatabaseEvent = {
 };
 
 type DatabaseShow = {
+  _id: { toString(): string };
   pricing: Array<{ price: number }>;
   startTime: Date;
   endTime: Date;
@@ -147,6 +148,7 @@ function mockEventDetail(item: ContentCard): EventDetail {
       description:
         "Independent live experiences, thoughtfully produced for the city.",
     },
+    showId: undefined,
   };
 }
 
@@ -198,6 +200,7 @@ function formatDatabaseEvent(
       description: event.organizer?.description,
       logo: event.organizer?.logo,
     },
+    showId: show?._id.toString(),
   };
 }
 
@@ -227,7 +230,7 @@ export async function getEventDetail(
         bookingStatus: "SCHEDULED",
       })
         .sort({ startTime: 1 })
-        .select("pricing startTime endTime")
+        .select("_id pricing startTime endTime")
         .lean()) as unknown as DatabaseShow | null;
       return formatDatabaseEvent(event, show);
     }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AuthRequired } from "@/components/auth/auth-required";
 import { SeatPicker } from "@/components/booking";
 
 export const metadata: Metadata = {
@@ -23,7 +24,9 @@ export default async function BookingPage({
     );
   return (
     <main className="mx-auto min-h-screen max-w-7xl px-5 py-8 text-foreground sm:px-6">
-      <SeatPicker showId={showId} initialNotice={notice} groupId={groupId} />
+      <AuthRequired>
+        <SeatPicker showId={showId} initialNotice={notice} groupId={groupId} />
+      </AuthRequired>
     </main>
   );
 }

@@ -49,6 +49,7 @@ export type EventDetail = {
     description?: string;
     logo?: string;
   };
+  showId?: string;
 };
 
 export type MovieShowtime = {

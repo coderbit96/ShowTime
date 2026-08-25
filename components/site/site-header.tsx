@@ -2,9 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { onAuthStateChanged, type User } from "firebase/auth";
 import { ChevronDown, Menu, Search, Ticket, UserRound, X } from "lucide-react";
 import { GlobalSearch } from "@/components/search";
+import { firebaseAuth } from "@/lib/firebase/client";
 import { CitySelector } from "./city-selector";
 import { NotificationMenu } from "./notification-menu";
 
@@ -20,6 +22,14 @@ const navLinks = [
 export function SiteHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [authUser, setAuthUser] = useState<User | null>(null);
+  const accountHref = authUser
+    ? "/account"
+    : `/auth/login?returnTo=${encodeURIComponent("/account")}`;
+
+  useEffect(() => {
+    return onAuthStateChanged(firebaseAuth, (user) => setAuthUser(user));
+  }, []);
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-background/78 shadow-[0_10px_38px_rgba(0,0,0,0.28)] backdrop-blur-xl">
@@ -72,7 +82,7 @@ export function SiteHeader() {
             {accountOpen ? (
               <div className="premium-panel absolute right-0 top-12 z-40 w-56 rounded-md p-2">
                 <Link
-                  href="/account"
+                  href={accountHref}
                   onClick={() => setAccountOpen(false)}
                   className="block rounded-md px-3 py-2.5 text-sm font-medium hover:bg-white/[0.07] hover:text-secondary"
                 >
@@ -144,6 +154,7 @@ export function SiteHeader() {
               <Link
                 href="/auth/login"
                 className="premium-button h-10 gap-2 px-3 text-sm font-semibold"
+                onClick={() => setMobileOpen(false)}
               >
                 <Ticket className="size-4" aria-hidden="true" />
                 Login
@@ -151,6 +162,7 @@ export function SiteHeader() {
               <Link
                 href="/auth/register"
                 className="premium-button-secondary h-10 px-3 text-sm font-semibold"
+                onClick={() => setMobileOpen(false)}
               >
                 Register
               </Link>

@@ -4,6 +4,7 @@ import {
   Check,
   LoaderCircle,
   Save,
+  Search,
   ShieldCheck,
   UserCheck,
   X,
@@ -68,6 +69,7 @@ export function AdminControlCenter({ section }: { section: Section }) {
 
   const update = async (path: string, body: AnyRecord) => {
     try {
+      setError("");
       await request(path, { method: "PATCH", body: JSON.stringify(body) });
       setNotice("Change saved and recorded in the audit log.");
       await load();
@@ -138,14 +140,111 @@ function UsersView({
 }) {
   const users = (data.users as AnyRecord[] | undefined) ?? [];
   const organizers = (data.organizers as AnyRecord[] | undefined) ?? [];
+  const [query, setQuery] = useState("");
+  const [customerStatus, setCustomerStatus] = useState<
+    "ALL" | "ACTIVE" | "INACTIVE"
+  >("ALL");
+  const [organizerStatus, setOrganizerStatus] = useState<
+    "ALL" | "PENDING" | "VERIFIED" | "REJECTED" | "SUSPENDED"
+  >("ALL");
+  const normalizedQuery = query.trim().toLowerCase();
+  const matchesQuery = (item: AnyRecord) => {
+    if (!normalizedQuery) return true;
+    const user = item.user as AnyRecord | null;
+    return [
+      item.name,
+      item.email,
+      item.organizationName,
+      user?.name,
+      user?.email,
+    ]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(normalizedQuery));
+  };
+  const allCustomers = users.filter((user) => user.role === "CUSTOMER");
+  const customers = allCustomers.filter((user) => {
+    if (!matchesQuery(user)) return false;
+    if (customerStatus === "ACTIVE") return Boolean(user.active);
+    if (customerStatus === "INACTIVE") return !user.active;
+    return true;
+  });
+  const visibleOrganizers = organizers.filter((organizer) => {
+    if (!matchesQuery(organizer)) return false;
+    if (organizerStatus === "ALL") return true;
+    return organizer.verificationStatus === organizerStatus;
+  });
+  const pendingOrganizers = visibleOrganizers.filter(
+    (organizer) => organizer.verificationStatus === "PENDING",
+  );
+  const managedOrganizers = visibleOrganizers.filter(
+    (organizer) => organizer.verificationStatus !== "PENDING",
+  );
+  const statusCounts = organizers.reduce<Record<string, number>>(
+    (counts, organizer) => {
+      const status = String(organizer.verificationStatus);
+      counts[status] = (counts[status] ?? 0) + 1;
+      return counts;
+    },
+    {},
+  );
   return (
-    <div className="mt-7 grid gap-8 xl:grid-cols-2">
-      <section>
-        <h2 className="text-lg font-semibold">Customers</h2>
-        <div className="mt-4 grid gap-3">
-          {users
-            .filter((user) => user.role === "CUSTOMER")
-            .map((user) => (
+    <div className="mt-7 space-y-6">
+      <section className="grid gap-3 rounded-md border border-border bg-surface p-4 lg:grid-cols-[minmax(0,1fr)_auto]">
+        <label className="relative block">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" />
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search customers, organizers, emails..."
+            className="h-11 w-full rounded-md border border-border bg-background px-10 text-sm"
+          />
+        </label>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <select
+            value={customerStatus}
+            onChange={(event) =>
+              setCustomerStatus(
+                event.target.value as "ALL" | "ACTIVE" | "INACTIVE",
+              )
+            }
+            className="h-11 rounded-md border border-border bg-background px-3 text-sm"
+            aria-label="Filter customers"
+          >
+            <option value="ALL">All customers</option>
+            <option value="ACTIVE">Active customers</option>
+            <option value="INACTIVE">Inactive customers</option>
+          </select>
+          <select
+            value={organizerStatus}
+            onChange={(event) =>
+              setOrganizerStatus(
+                event.target.value as
+                  "ALL" | "PENDING" | "VERIFIED" | "REJECTED" | "SUSPENDED",
+              )
+            }
+            className="h-11 rounded-md border border-border bg-background px-3 text-sm"
+            aria-label="Filter organizers"
+          >
+            <option value="ALL">All organizers</option>
+            <option value="PENDING">Pending approval</option>
+            <option value="VERIFIED">Verified</option>
+            <option value="REJECTED">Rejected</option>
+            <option value="SUSPENDED">Suspended</option>
+          </select>
+        </div>
+      </section>
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <MetricPill label="Customers" value={allCustomers.length} />
+        <MetricPill label="Pending" value={statusCounts.PENDING ?? 0} />
+        <MetricPill label="Verified" value={statusCounts.VERIFIED ?? 0} />
+        <MetricPill label="Rejected" value={statusCounts.REJECTED ?? 0} />
+        <MetricPill label="Suspended" value={statusCounts.SUSPENDED ?? 0} />
+      </section>
+      <div className="grid gap-8 xl:grid-cols-2">
+        <section>
+          <h2 className="text-lg font-semibold">Customers</h2>
+          <div className="mt-4 grid gap-3">
+            {customers.map((user) => (
               <article
                 key={String(user._id)}
                 className="flex items-center justify-between gap-3 rounded-md border border-border bg-surface p-4"
@@ -168,63 +267,154 @@ function UsersView({
                 </button>
               </article>
             ))}
-        </div>
-      </section>
-      <section>
-        <h2 className="text-lg font-semibold">Organizer approvals</h2>
-        <div className="mt-4 grid gap-3">
-          {organizers.map((organizer) => {
-            const user = organizer.user as AnyRecord | null;
-            return (
-              <article
-                key={String(organizer._id)}
-                className="rounded-md border border-border bg-surface p-4"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-medium">
-                      {String(organizer.organizationName)}
-                    </p>
-                    <p className="text-xs text-muted">
-                      {String(user?.email ?? "")}
-                    </p>
-                  </div>
-                  <span className="rounded-sm bg-warning/15 px-2 py-1 text-[11px] font-semibold text-warning">
-                    {String(organizer.verificationStatus)}
-                  </span>
-                </div>
-                <div className="mt-4 flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      void update(
-                        `/api/admin/organizers/${String(organizer._id)}/status`,
-                        { status: "VERIFIED", canCreateVenues: true },
-                      )
-                    }
-                    className="inline-flex h-9 items-center gap-1 rounded-md bg-primary px-3 text-xs font-semibold text-primary-foreground"
-                  >
-                    <Check className="size-3.5" /> Approve
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      void update(
-                        `/api/admin/organizers/${String(organizer._id)}/status`,
-                        { status: "REJECTED" },
-                      )
-                    }
-                    className="inline-flex h-9 items-center gap-1 rounded-md border border-accent/50 px-3 text-xs font-semibold text-accent"
-                  >
-                    <X className="size-3.5" /> Reject
-                  </button>
-                </div>
-              </article>
-            );
-          })}
-        </div>
-      </section>
+            {customers.length === 0 ? (
+              <p className="rounded-md border border-border bg-surface p-4 text-sm text-muted">
+                No customers found.
+              </p>
+            ) : null}
+          </div>
+        </section>
+        <section className="space-y-8">
+          <div>
+            <h2 className="text-lg font-semibold">Organizer approvals</h2>
+            <div className="mt-4 grid gap-3">
+              {pendingOrganizers.map((organizer) => (
+                <OrganizerCard
+                  key={String(organizer._id)}
+                  organizer={organizer}
+                  update={update}
+                  mode="approval"
+                />
+              ))}
+              {pendingOrganizers.length === 0 ? (
+                <p className="rounded-md border border-border bg-surface p-4 text-sm text-muted">
+                  No pending organizer approvals.
+                </p>
+              ) : null}
+            </div>
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold">Organizer accounts</h2>
+            <div className="mt-4 grid gap-3">
+              {managedOrganizers.map((organizer) => (
+                <OrganizerCard
+                  key={String(organizer._id)}
+                  organizer={organizer}
+                  update={update}
+                  mode="management"
+                />
+              ))}
+              {managedOrganizers.length === 0 ? (
+                <p className="rounded-md border border-border bg-surface p-4 text-sm text-muted">
+                  No approved, rejected, or suspended organizers yet.
+                </p>
+              ) : null}
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
+  );
+}
+
+function MetricPill({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-md border border-border bg-surface px-4 py-3">
+      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
+        {label}
+      </p>
+      <p className="mt-1 text-2xl font-semibold">{value}</p>
+    </div>
+  );
+}
+
+function OrganizerCard({
+  mode,
+  organizer,
+  update,
+}: {
+  mode: "approval" | "management";
+  organizer: AnyRecord;
+  update: (path: string, body: AnyRecord) => Promise<void>;
+}) {
+  const user = organizer.user as AnyRecord | null;
+  const status = String(organizer.verificationStatus);
+  const updateStatus = (body: AnyRecord) =>
+    update(`/api/admin/organizers/${String(organizer._id)}/status`, body);
+
+  return (
+    <article className="rounded-md border border-border bg-surface p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="font-medium">{String(organizer.organizationName)}</p>
+          <p className="text-xs text-muted">{String(user?.email ?? "")}</p>
+        </div>
+        <OrganizerStatusBadge status={status} />
+      </div>
+      <div className="mt-4 flex flex-wrap gap-2">
+        {mode === "approval" ? (
+          <>
+            <button
+              type="button"
+              onClick={() =>
+                void updateStatus({
+                  status: "VERIFIED",
+                  canCreateVenues: true,
+                })
+              }
+              className="inline-flex h-9 items-center gap-1 rounded-md bg-primary px-3 text-xs font-semibold text-primary-foreground"
+            >
+              <Check className="size-3.5" /> Approve
+            </button>
+            <button
+              type="button"
+              onClick={() => void updateStatus({ status: "REJECTED" })}
+              className="inline-flex h-9 items-center gap-1 rounded-md border border-accent/50 px-3 text-xs font-semibold text-accent"
+            >
+              <X className="size-3.5" /> Reject
+            </button>
+          </>
+        ) : status === "VERIFIED" ? (
+          <button
+            type="button"
+            onClick={() => void updateStatus({ status: "SUSPENDED" })}
+            className="inline-flex h-9 items-center gap-1 rounded-md border border-accent/50 px-3 text-xs font-semibold text-accent"
+          >
+            <X className="size-3.5" /> Suspend
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() =>
+              void updateStatus({
+                status: "VERIFIED",
+                canCreateVenues: true,
+              })
+            }
+            className="inline-flex h-9 items-center gap-1 rounded-md bg-primary px-3 text-xs font-semibold text-primary-foreground"
+          >
+            <Check className="size-3.5" /> Approve
+          </button>
+        )}
+      </div>
+    </article>
+  );
+}
+
+function OrganizerStatusBadge({ status }: { status: string }) {
+  const className =
+    status === "VERIFIED"
+      ? "bg-emerald-500/15 text-emerald-300"
+      : status === "PENDING"
+        ? "bg-warning/15 text-warning"
+        : "bg-accent/15 text-accent";
+
+  return (
+    <span
+      className={`rounded-sm px-2 py-1 text-[11px] font-semibold ${className}`}
+    >
+      {status}
+    </span>
   );
 }
 

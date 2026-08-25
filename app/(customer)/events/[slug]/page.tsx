@@ -79,7 +79,9 @@ export default async function EventDetailPage({ params }: EventPageProps) {
   const mapQuery = encodeURIComponent(
     `${event.venue.name}, ${event.venue.address}`,
   );
-  const bookingHref = `/events/${event.slug}/book`;
+  const bookingHref = event.showId
+    ? `/booking?showId=${encodeURIComponent(event.showId)}`
+    : null;
   const structuredData = [
     eventJsonLd(event),
     breadcrumbJsonLd([
@@ -151,13 +153,20 @@ export default async function EventDetailPage({ params }: EventPageProps) {
               ) : null}
             </div>
             <div className="mt-7 flex flex-wrap items-center gap-4">
-              <Link
-                href={bookingHref}
-                className="inline-flex h-12 items-center gap-2 rounded-md bg-accent px-5 text-sm font-semibold text-accent-foreground shadow-[0_0_28px_rgba(244,63,94,0.42)] transition-colors hover:bg-warning"
-              >
-                <Ticket className="size-4" aria-hidden="true" />
-                Book Tickets
-              </Link>
+              {bookingHref ? (
+                <Link
+                  href={bookingHref}
+                  className="inline-flex h-12 items-center gap-2 rounded-md bg-accent px-5 text-sm font-semibold text-accent-foreground shadow-[0_0_28px_rgba(244,63,94,0.42)] transition-colors hover:bg-warning"
+                >
+                  <Ticket className="size-4" aria-hidden="true" />
+                  Book Tickets
+                </Link>
+              ) : (
+                <span className="inline-flex h-12 items-center gap-2 rounded-md border border-border bg-surface-muted px-5 text-sm font-semibold text-muted">
+                  <Ticket className="size-4" aria-hidden="true" />
+                  Showtimes coming soon
+                </span>
+              )}
               <p className="text-sm font-medium text-primary-foreground/82">
                 Tickets from {"\u20b9"}
                 {event.priceFrom}
@@ -302,29 +311,38 @@ export default async function EventDetailPage({ params }: EventPageProps) {
                 </p>
               ) : null}
               <div className="mt-5 border-t border-border pt-5">
-                <Link
-                  href={bookingHref}
-                  className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-accent px-4 text-sm font-semibold text-accent-foreground transition-colors hover:bg-warning"
-                >
-                  <Ticket className="size-4" aria-hidden="true" />
-                  Book Tickets
-                </Link>
+                {bookingHref ? (
+                  <Link
+                    href={bookingHref}
+                    className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-accent px-4 text-sm font-semibold text-accent-foreground transition-colors hover:bg-warning"
+                  >
+                    <Ticket className="size-4" aria-hidden="true" />
+                    Book Tickets
+                  </Link>
+                ) : (
+                  <span className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-border bg-surface-muted px-4 text-sm font-semibold text-muted">
+                    <Ticket className="size-4" aria-hidden="true" />
+                    Showtimes coming soon
+                  </span>
+                )}
               </div>
             </section>
           </CardHover>
         </aside>
       </div>
 
-      <div className="sticky bottom-0 z-30 border-t border-border bg-background/95 p-3 backdrop-blur lg:hidden">
-        <Link
-          href={bookingHref}
-          className="mx-auto flex h-11 max-w-7xl items-center justify-center gap-2 rounded-md bg-accent px-4 text-sm font-semibold text-accent-foreground"
-        >
-          <Ticket className="size-4" aria-hidden="true" />
-          Book Tickets from {"\u20b9"}
-          {event.priceFrom}
-        </Link>
-      </div>
+      {bookingHref ? (
+        <div className="sticky bottom-0 z-30 border-t border-border bg-background/95 p-3 backdrop-blur lg:hidden">
+          <Link
+            href={bookingHref}
+            className="mx-auto flex h-11 max-w-7xl items-center justify-center gap-2 rounded-md bg-accent px-4 text-sm font-semibold text-accent-foreground"
+          >
+            <Ticket className="size-4" aria-hidden="true" />
+            Book Tickets from {"\u20b9"}
+            {event.priceFrom}
+          </Link>
+        </div>
+      ) : null}
     </main>
   );
 }
