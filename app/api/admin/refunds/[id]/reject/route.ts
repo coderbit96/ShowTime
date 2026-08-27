@@ -12,7 +12,10 @@ export async function POST(
   try {
     const admin = await requireManagementUser(request, ["ADMIN"]);
     const { id } = await params;
-    return NextResponse.json({ refund: await rejectRefund(admin.id, id) });
+    const body = (await request.json().catch(() => ({}))) as { note?: string };
+    return NextResponse.json({
+      refund: await rejectRefund(admin.id, id, body.note),
+    });
   } catch (error) {
     if (error instanceof RefundFlowError)
       return NextResponse.json(

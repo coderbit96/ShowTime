@@ -3,12 +3,16 @@
 import Link from "next/link";
 import {
   BarChart3,
+  Building2,
   CalendarDays,
   CircleDollarSign,
   ClipboardList,
   FileText,
+  Film,
   LogIn,
   LoaderCircle,
+  Plus,
+  ShieldCheck,
   Ticket,
   Users,
   WalletCards,
@@ -19,12 +23,19 @@ import { usePathname, useRouter } from "next/navigation";
 import { firebaseAuth } from "@/lib/firebase/client";
 
 type Role = "ADMIN" | "ORGANIZER";
+type TrendPoint = {
+  _id: string;
+  revenue: number;
+  bookings: number;
+  tickets: number;
+};
 type AnalyticsData = {
   generatedAt: string;
   kpis: Record<string, number | null>;
   charts: {
-    dailyRevenue: Array<{ _id: string; revenue: number; bookings: number }>;
-    monthlyRevenue: Array<{ _id: string; revenue: number; bookings: number }>;
+    dailyRevenue: TrendPoint[];
+    weeklyRevenue: TrendPoint[];
+    monthlyRevenue: TrendPoint[];
     bookingTrends: Array<{
       _id: string;
       confirmed: number;
@@ -40,6 +51,28 @@ type AnalyticsData = {
     }>;
     popularCities: Array<{ _id: string; bookings: number; revenue: number }>;
     organizerPerformance: Array<{ _id: string; name: string; events: number }>;
+    topVenues: Array<{ _id: string; bookings: number; revenue: number }>;
+    topCinemas: Array<{ _id: string; bookings: number; revenue: number }>;
+    recentTransactions: Array<{
+      _id: string;
+      amount: number;
+      currency: string;
+      status: string;
+      createdAt: string;
+      gatewayPaymentId?: string;
+      booking?: {
+        status?: string;
+        user?: { name?: string; email?: string };
+      };
+    }>;
+    recentAdminActivity: Array<{
+      _id: string;
+      action: string;
+      resourceType: string;
+      actorRole: string;
+      createdAt: string;
+      actor?: { name?: string; email?: string };
+    }>;
   };
 };
 
@@ -212,12 +245,57 @@ function DashboardContent({ data, role }: { data: AnalyticsData; role: Role }) {
     role === "ADMIN"
       ? [
           {
+            label: "Total registered users",
+            value: String(data.kpis.totalRegisteredUsers ?? 0),
+            icon: Users,
+          },
+          {
+            label: "Total organizers",
+            value: String(data.kpis.allOrganizers ?? 0),
+            icon: Building2,
+          },
+          {
+            label: "Total events",
+            value: String(data.kpis.totalEvents ?? 0),
+            icon: CalendarDays,
+          },
+          {
+            label: "Total movies",
+            value: String(data.kpis.totalMovies ?? 0),
+            icon: Film,
+          },
+          {
+            label: "Live events",
+            value: String(data.kpis.activeEvents ?? 0),
+            icon: CalendarDays,
+          },
+          {
+            label: "Upcoming events",
+            value: String(data.kpis.upcomingEvents ?? 0),
+            icon: CalendarDays,
+          },
+          {
+            label: "Completed events",
+            value: String(data.kpis.completedEvents ?? 0),
+            icon: CalendarDays,
+          },
+          {
+            label: "Today's bookings",
+            value: String(data.kpis.todayBookings ?? 0),
+            icon: ClipboardList,
+          },
+          {
+            label: "Today's revenue",
+            value: `INR ${data.kpis.todayRevenue ?? 0}`,
+            icon: CircleDollarSign,
+          },
+          {
             label: "Total revenue",
             value: `INR ${data.kpis.totalRevenue ?? 0}`,
             icon: CircleDollarSign,
           },
           {
-            label: "Platform revenue",
+            label: "Total platform revenue",
             value: `INR ${data.kpis.platformRevenue ?? 0}`,
             icon: WalletCards,
           },
@@ -227,29 +305,29 @@ function DashboardContent({ data, role }: { data: AnalyticsData; role: Role }) {
             icon: ClipboardList,
           },
           {
-            label: "Ticket sales",
-            value: String(data.kpis.ticketSales ?? 0),
-            icon: Ticket,
-          },
-          {
-            label: "Active events",
-            value: String(data.kpis.activeEvents ?? 0),
-            icon: CalendarDays,
-          },
-          {
-            label: "Customers",
-            value: String(data.kpis.totalCustomers ?? 0),
-            icon: Users,
-          },
-          {
-            label: "Pending events",
+            label: "Pending event approvals",
             value: String(data.kpis.pendingEvents ?? 0),
             icon: FileText,
           },
           {
-            label: "Refund amount",
-            value: `INR ${data.kpis.refundAmount ?? 0}`,
+            label: "Pending organizer approvals",
+            value: String(data.kpis.pendingOrganizers ?? 0),
+            icon: Building2,
+          },
+          {
+            label: "Pending refund requests",
+            value: String(data.kpis.pendingRefunds ?? 0),
             icon: WalletCards,
+          },
+          {
+            label: "Cancelled bookings",
+            value: String(data.kpis.cancelledBookings ?? 0),
+            icon: ClipboardList,
+          },
+          {
+            label: "Ticket sales",
+            value: String(data.kpis.ticketSales ?? 0),
+            icon: Ticket,
           },
         ]
       : [
@@ -304,39 +382,222 @@ function DashboardContent({ data, role }: { data: AnalyticsData; role: Role }) {
           );
         })}
       </div>
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(20rem,1fr)]">
-        <Chart
-          title="Daily revenue"
-          items={data.charts.dailyRevenue.map((item) => ({
-            label: item._id.slice(5),
-            value: item.revenue,
-          }))}
-          currency
-        />
-        <Chart
-          title="Booking trends"
-          items={data.charts.bookingTrends.map((item) => ({
-            label: item._id.slice(5),
-            value: item.confirmed,
-          }))}
-        />
-      </div>
+      {role === "ADMIN" ? (
+        <AdminTrendCharts charts={data.charts} />
+      ) : (
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(20rem,1fr)]">
+          <Chart
+            title="Daily revenue"
+            items={data.charts.dailyRevenue.map((item) => ({
+              label: item._id.slice(5),
+              value: item.revenue,
+            }))}
+            currency
+          />
+          <Chart
+            title="Booking trends"
+            items={data.charts.bookingTrends.map((item) => ({
+              label: item._id.slice(5),
+              value: item.confirmed,
+            }))}
+          />
+        </div>
+      )}
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
         <Ranking title="Popular events" items={data.charts.popularEvents} />
         <Ranking title="Popular movies" items={data.charts.popularMovies} />
         <Ranking title="Categories" items={data.charts.popularCategories} />
         <Ranking title="Cities" items={data.charts.popularCities} />
+        {role === "ADMIN" ? (
+          <>
+            <Ranking title="Top venues" items={data.charts.topVenues} />
+            <Ranking title="Top cinemas" items={data.charts.topCinemas} />
+          </>
+        ) : null}
       </div>
-      {role === "ADMIN" ? (
+      {role === "ADMIN" ? <AdminOperations data={data} /> : null}
+    </div>
+  );
+}
+
+function AdminTrendCharts({ charts }: { charts: AnalyticsData["charts"] }) {
+  const [period, setPeriod] = useState<"daily" | "weekly" | "monthly">("daily");
+  const pointsByPeriod = {
+    daily: charts.dailyRevenue,
+    weekly: charts.weeklyRevenue,
+    monthly: charts.monthlyRevenue,
+  };
+  const points = pointsByPeriod[period];
+  const periodLabel =
+    period === "daily" ? "Daily" : period === "weekly" ? "Weekly" : "Monthly";
+
+  return (
+    <section className="rounded-md border border-border bg-surface p-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+            Performance trends
+          </p>
+          <h2 className="mt-1 text-lg font-semibold">Sales and revenue</h2>
+        </div>
+        <div
+          className="flex rounded-md border border-border bg-background/70 p-1"
+          role="group"
+          aria-label="Trend range"
+        >
+          {(["daily", "weekly", "monthly"] as const).map((range) => (
+            <button
+              key={range}
+              type="button"
+              onClick={() => setPeriod(range)}
+              className={`h-8 rounded-sm px-3 text-xs font-semibold capitalize transition-colors ${period === range ? "bg-primary text-primary-foreground" : "text-muted hover:text-foreground"}`}
+            >
+              {range}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="mt-5 grid gap-6 xl:grid-cols-2">
+        <Chart
+          title={`${periodLabel} ticket sales`}
+          items={points.map((item) => ({
+            label: trendLabel(item._id, period),
+            value: item.tickets,
+          }))}
+        />
+        <Chart
+          title={`${periodLabel} revenue`}
+          items={points.map((item) => ({
+            label: trendLabel(item._id, period),
+            value: item.revenue,
+          }))}
+          currency
+        />
+      </div>
+    </section>
+  );
+}
+
+function trendLabel(value: string, period: "daily" | "weekly" | "monthly") {
+  if (period === "daily") return value.slice(5);
+  if (period === "monthly") return value;
+  return value.replace(/^\d{4}-/, "");
+}
+
+function AdminOperations({ data }: { data: AnalyticsData }) {
+  const quickActions = [
+    { label: "Add Event", href: "/admin/events", icon: CalendarDays },
+    { label: "Add Movie", href: "/admin/shows", icon: Film },
+    { label: "Add Venue", href: "/admin/management", icon: Building2 },
+    { label: "Create Coupon", href: "/admin/marketing", icon: Ticket },
+    { label: "Review Approvals", href: "/admin/users", icon: ShieldCheck },
+  ];
+
+  return (
+    <div className="grid gap-6 xl:grid-cols-2">
+      <div className="grid gap-6">
         <Ranking
-          title="Organizer performance"
+          title="Top organizers"
           items={data.charts.organizerPerformance.map((item) => ({
             _id: item.name,
             bookings: item.events,
             revenue: item.events,
           }))}
         />
-      ) : null}
+        <section className="rounded-md border border-border bg-surface p-5">
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold">Recent transactions</h2>
+            <Link
+              href="/admin/bookings"
+              className="text-xs font-semibold text-secondary hover:text-foreground"
+            >
+              View all
+            </Link>
+          </div>
+          <div className="mt-4 grid gap-3">
+            {data.charts.recentTransactions.length ? (
+              data.charts.recentTransactions.map((transaction) => (
+                <div
+                  key={transaction._id}
+                  className="flex items-center justify-between gap-3 border-b border-border pb-3 last:border-0 last:pb-0"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">
+                      {transaction.booking?.user?.name ?? "Customer payment"}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted">
+                      {new Date(transaction.createdAt).toLocaleString("en-IN")}
+                    </p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="text-sm font-semibold">
+                      {transaction.currency} {transaction.amount}
+                    </p>
+                    <p className="mt-0.5 text-[11px] font-semibold text-secondary">
+                      {transaction.status}
+                    </p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-muted">No transactions yet.</p>
+            )}
+          </div>
+        </section>
+      </div>
+      <div className="grid gap-6">
+        <section className="rounded-md border border-border bg-surface p-5">
+          <h2 className="font-semibold">Quick actions</h2>
+          <p className="mt-1 text-sm text-muted">
+            Jump directly into your most frequent platform tasks.
+          </p>
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            {quickActions.map(({ label, href, icon: Icon }) => (
+              <Link
+                key={label}
+                href={href}
+                className="group flex items-center gap-3 rounded-md border border-border bg-background/50 px-3 py-3 text-sm font-semibold hover:border-secondary/60 hover:bg-secondary/10"
+              >
+                <span className="grid size-8 place-items-center rounded-sm bg-primary/15 text-secondary group-hover:bg-primary group-hover:text-primary-foreground">
+                  <Icon className="size-4" />
+                </span>
+                <span className="flex-1">{label}</span>
+                <Plus className="size-4 text-muted group-hover:text-secondary" />
+              </Link>
+            ))}
+          </div>
+        </section>
+        <section className="rounded-md border border-border bg-surface p-5">
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold">Recent admin activity</h2>
+            <Link
+              href="/admin/audit-logs"
+              className="text-xs font-semibold text-secondary hover:text-foreground"
+            >
+              View audit log
+            </Link>
+          </div>
+          <div className="mt-4 grid gap-3">
+            {data.charts.recentAdminActivity.length ? (
+              data.charts.recentAdminActivity.map((activity) => (
+                <div
+                  key={activity._id}
+                  className="border-b border-border pb-3 last:border-0 last:pb-0"
+                >
+                  <p className="text-sm font-medium">{activity.action}</p>
+                  <p className="mt-0.5 text-xs text-muted">
+                    {activity.actor?.email ?? activity.actorRole} ·{" "}
+                    {activity.resourceType} ·{" "}
+                    {new Date(activity.createdAt).toLocaleString("en-IN")}
+                  </p>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-muted">No admin activity yet.</p>
+            )}
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

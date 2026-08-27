@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { z } from "zod";
 import { connectToDatabase } from "@/lib/mongodb/connect";
-import { Booking, GroupBooking, SeatLock, Show, User } from "@/models";
+import { Booking, City, GroupBooking, SeatLock, Show, User } from "@/models";
 import {
   validateCouponForBooking,
   type AppliedCoupon,
@@ -106,6 +106,7 @@ async function applyCommercialAdjustments(
     category?: mongoose.Types.ObjectId | null;
     event?: mongoose.Types.ObjectId | null;
     movie?: mongoose.Types.ObjectId | null;
+    organizer?: mongoose.Types.ObjectId | null;
   },
 ) {
   const dynamicallyPricedSeats = await applyDynamicPricing(summary.seats, {
@@ -172,10 +173,25 @@ export async function getBookingSummary(
     active: true,
     bookingStatus: "SCHEDULED",
   })
-    .select("seatAvailability pricing event movie city category")
+    .select(
+      "seatAvailability pricing event movie city category organizer bookingOpensAt bookingClosesAt",
+    )
     .lean();
   if (!show)
     throw new PendingBookingError("This show is no longer bookable.", 409);
+  const activeCity = await City.exists({ _id: show.city, active: true });
+  if (!activeCity)
+    throw new PendingBookingError(
+      "This show is not available in the selected city.",
+      409,
+    );
+  if (show.bookingOpensAt && show.bookingOpensAt > new Date())
+    throw new PendingBookingError(
+      "Booking for this show has not opened yet.",
+      409,
+    );
+  if (show.bookingClosesAt && show.bookingClosesAt <= new Date())
+    throw new PendingBookingError("Booking for this show has closed.", 409);
   return applyCommercialAdjustments(userId, toSummary(lock, show), show);
 }
 
@@ -267,11 +283,29 @@ export async function createPendingBooking(
         active: true,
         bookingStatus: "SCHEDULED",
       })
-        .select("seatAvailability pricing event movie city category")
+        .select(
+          "seatAvailability pricing event movie city category organizer bookingOpensAt bookingClosesAt",
+        )
         .session(session)
         .lean();
       if (!show)
         throw new PendingBookingError("This show is no longer bookable.", 409);
+      const activeCity = await City.exists({
+        _id: show.city,
+        active: true,
+      }).session(session);
+      if (!activeCity)
+        throw new PendingBookingError(
+          "This show is not available in the selected city.",
+          409,
+        );
+      if (show.bookingOpensAt && show.bookingOpensAt > now)
+        throw new PendingBookingError(
+          "Booking for this show has not opened yet.",
+          409,
+        );
+      if (show.bookingClosesAt && show.bookingClosesAt <= now)
+        throw new PendingBookingError("Booking for this show has closed.", 409);
       const user = input.groupBookingId
         ? await User.findById(userId).session(session).select("email").lean()
         : null;
@@ -310,7 +344,10 @@ export async function createPendingBooking(
             code: input.couponCode,
             userId,
             eventId: show.event?.toString(),
+            movieId: show.movie?.toString(),
             categoryId: show.category?.toString(),
+            organizerId: show.organizer?.toString(),
+            cityId: show.city?.toString(),
             seats: baseSummary.seats,
           })
         : null;

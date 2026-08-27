@@ -26,7 +26,10 @@ export function AuthPanel({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [currentMode, setCurrentMode] = useState<AuthMode>(mode);
+  const isAdminLogin = intent === "ADMIN";
+  const [currentMode, setCurrentMode] = useState<AuthMode>(
+    isAdminLogin ? "login" : mode,
+  );
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(
     searchParams.get("notice") === "approval-pending"
@@ -109,6 +112,9 @@ export function AuthPanel({
     const profileRole = intent === "ORGANIZER" ? "ORGANIZER" : "CUSTOMER";
     try {
       if (currentMode === "register") {
+        if (isAdminLogin) {
+          throw new Error("Admin accounts can only be created by the system.");
+        }
         const credential = await createUserWithEmailAndPassword(
           firebaseAuth,
           email,
@@ -175,7 +181,11 @@ export function AuthPanel({
           {message}
         </div>
       ) : null}
-      <section className="mx-auto max-w-md rounded-md border border-border bg-surface p-5 shadow-xl shadow-black/10">
+      <section
+        className={`mx-auto rounded-md border border-border bg-surface shadow-xl shadow-black/10 ${
+          isAdminLogin ? "min-h-[32rem] max-w-sm p-6 sm:p-7" : "max-w-md p-5"
+        }`}
+      >
         <p className="text-sm font-semibold text-secondary">Show Time</p>
         <h1 className="mt-2 text-3xl font-semibold">{title}</h1>
         {intent !== "CUSTOMER" ? (
@@ -263,43 +273,47 @@ export function AuthPanel({
             Continue with Google
           </button>
         ) : null}
-        <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted">
-          {intent === "ORGANIZER" ? (
-            <>
-              {currentMode !== "login" ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCurrentMode("login");
-                    setMessage("");
-                  }}
-                  className="hover:text-foreground"
-                >
-                  Login
-                </button>
-              ) : null}
-              {currentMode !== "register" ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCurrentMode("register");
-                    setMessage("");
-                  }}
-                  className="hover:text-foreground"
-                >
-                  Register
-                </button>
-              ) : null}
-            </>
-          ) : (
-            <>
-              {currentMode !== "login" ? <a href="/auth/login">Login</a> : null}
-              {currentMode !== "register" ? (
-                <a href="/auth/register">Register</a>
-              ) : null}
-            </>
-          )}
-        </div>
+        {!isAdminLogin ? (
+          <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted">
+            {intent === "ORGANIZER" ? (
+              <>
+                {currentMode !== "login" ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCurrentMode("login");
+                      setMessage("");
+                    }}
+                    className="hover:text-foreground"
+                  >
+                    Login
+                  </button>
+                ) : null}
+                {currentMode !== "register" ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCurrentMode("register");
+                      setMessage("");
+                    }}
+                    className="hover:text-foreground"
+                  >
+                    Register
+                  </button>
+                ) : null}
+              </>
+            ) : (
+              <>
+                {currentMode !== "login" ? (
+                  <a href="/auth/login">Login</a>
+                ) : null}
+                {currentMode !== "register" ? (
+                  <a href="/auth/register">Register</a>
+                ) : null}
+              </>
+            )}
+          </div>
+        ) : null}
       </section>
     </main>
   );

@@ -20,6 +20,18 @@ const PaymentSchema = new Schema(
     gatewayOrderId: { type: String, required: true, trim: true },
     gatewayPaymentId: { type: String, trim: true },
     signature: { type: String, trim: true },
+    paymentMethod: {
+      type: String,
+      enum: ["UPI", "CARD", "NET_BANKING", "WALLET", "OTHER"],
+      index: true,
+    },
+    gatewayResponse: {
+      eventId: { type: String, trim: true },
+      event: { type: String, trim: true },
+      receivedAt: { type: Date },
+      errorCode: { type: String, trim: true },
+      errorDescription: { type: String, trim: true },
+    },
     status: {
       type: String,
       enum: ["CREATED", "PENDING", "SUCCESS", "FAILED", "REFUNDED"],
@@ -50,6 +62,7 @@ PaymentSchema.index(
   },
 );
 PaymentSchema.index({ status: 1, createdAt: -1 });
+PaymentSchema.index({ paymentMethod: 1, createdAt: -1 });
 
 export interface IPayment extends InferSchemaType<typeof PaymentSchema> {}
 

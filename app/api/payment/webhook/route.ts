@@ -17,6 +17,9 @@ type RazorpayWebhookPayload = {
         order_id?: string;
         amount?: number;
         currency?: string;
+        method?: string;
+        error_code?: string;
+        error_description?: string;
       };
     };
   };
@@ -61,6 +64,9 @@ export async function POST(request: NextRequest) {
       orderId: payment.order_id,
       amount: payment.amount,
       currency: payment.currency,
+      method: payment.method,
+      errorCode: payment.error_code,
+      errorDescription: payment.error_description,
     });
     void publishPaymentLifecycleNotifications(result).catch((error) =>
       console.error("In-app notification dispatch failed", error),

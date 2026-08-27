@@ -12,11 +12,13 @@ export async function POST(request: NextRequest) {
       bookingId?: string;
       idempotencyKey?: string;
       manualReview?: boolean;
+      reason?: string;
     };
     const result = await requestRefund(user.id, {
       bookingId: body.bookingId ?? "",
       idempotencyKey: body.idempotencyKey ?? "",
       manualReview: body.manualReview,
+      reason: body.reason,
     });
     return NextResponse.json(result, { status: result.replayed ? 200 : 201 });
   } catch (error) {

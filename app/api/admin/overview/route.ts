@@ -11,6 +11,7 @@ import {
   Organizer,
   Payment,
   Review,
+  Ticket,
   User,
 } from "@/models";
 
@@ -22,12 +23,14 @@ export async function GET(request: NextRequest) {
     if (section === "users") {
       const [users, organizers] = await Promise.all([
         User.find({})
-          .select("name email role active createdAt")
+          .select(
+            "name email phone role active accountStatus blockedAt blockReason createdAt lastLoginAt",
+          )
           .sort({ createdAt: -1 })
           .limit(200)
           .lean(),
         Organizer.find({})
-          .populate("user", "name email")
+          .populate("user", "name email phone active accountStatus createdAt")
           .sort({ createdAt: -1 })
           .limit(200)
           .lean(),
@@ -64,20 +67,43 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ logs });
     }
     if (section === "bookings") {
-      const [bookings, payments] = await Promise.all([
-        Booking.find({})
-          .populate("user", "name email")
-          .populate("show", "startTime bookingStatus")
-          .sort({ createdAt: -1 })
-          .limit(200)
-          .lean(),
-        Payment.find({})
+      const bookings = await Booking.find({})
+        .populate("user", "name email phone")
+        .populate({
+          path: "show",
+          select:
+            "contentType startTime endTime bookingStatus movie event venue cinema",
+          populate: [
+            { path: "movie", select: "title" },
+            { path: "event", select: "title" },
+            { path: "venue", select: "name" },
+            { path: "cinema", select: "name" },
+          ],
+        })
+        .sort({ createdAt: -1 })
+        .limit(200)
+        .lean();
+      const bookingIds = bookings.map((booking) => booking._id);
+      const [payments, tickets] = await Promise.all([
+        Payment.find({ booking: { $in: bookingIds } })
           .populate("booking", "status")
           .sort({ createdAt: -1 })
-          .limit(200)
+          .limit(300)
+          .lean(),
+        Ticket.find({ booking: { $in: bookingIds } })
+          .select("booking ticketId checkedIn checkedInAt checkInStatus")
           .lean(),
       ]);
-      return NextResponse.json({ bookings, payments });
+      const ticketByBookingId = new Map(
+        tickets.map((ticket) => [ticket.booking.toString(), ticket]),
+      );
+      return NextResponse.json({
+        bookings: bookings.map((booking) => ({
+          ...booking,
+          ticket: ticketByBookingId.get(booking._id.toString()) ?? null,
+        })),
+        payments,
+      });
     }
     const [counts, pendingOrganizers, pendingEvents] = await Promise.all([
       Promise.all([

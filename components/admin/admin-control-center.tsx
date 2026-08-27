@@ -1,8 +1,11 @@
 "use client";
 
 import {
+  Ban,
   Check,
+  Eye,
   LoaderCircle,
+  RotateCcw,
   Save,
   Search,
   ShieldCheck,
@@ -114,7 +117,7 @@ export function AdminControlCenter({ section }: { section: Section }) {
             <LoaderCircle className="size-5 animate-spin" />
           </div>
         ) : section === "users" ? (
-          <UsersView data={data} update={update} />
+          <UsersView data={data} update={update} request={request} />
         ) : section === "events" ? (
           <EventsView data={data} update={update} />
         ) : section === "reviews" ? (
@@ -134,19 +137,25 @@ export function AdminControlCenter({ section }: { section: Section }) {
 function UsersView({
   data,
   update,
+  request,
 }: {
   data: AnyRecord;
   update: (path: string, body: AnyRecord) => Promise<void>;
+  request: (path: string, init?: RequestInit) => Promise<AnyRecord>;
 }) {
   const users = (data.users as AnyRecord[] | undefined) ?? [];
   const organizers = (data.organizers as AnyRecord[] | undefined) ?? [];
   const [query, setQuery] = useState("");
   const [customerStatus, setCustomerStatus] = useState<
-    "ALL" | "ACTIVE" | "INACTIVE"
+    "ALL" | "ACTIVE" | "INACTIVE" | "BLOCKED"
   >("ALL");
   const [organizerStatus, setOrganizerStatus] = useState<
     "ALL" | "PENDING" | "VERIFIED" | "REJECTED" | "SUSPENDED"
   >("ALL");
+  const [registeredFrom, setRegisteredFrom] = useState("");
+  const [registeredTo, setRegisteredTo] = useState("");
+  const [selectedCustomerId, setSelectedCustomerId] = useState("");
+  const [selectedOrganizerId, setSelectedOrganizerId] = useState("");
   const normalizedQuery = query.trim().toLowerCase();
   const matchesQuery = (item: AnyRecord) => {
     if (!normalizedQuery) return true;
@@ -154,6 +163,7 @@ function UsersView({
     return [
       item.name,
       item.email,
+      item.phone,
       item.organizationName,
       user?.name,
       user?.email,
@@ -164,8 +174,17 @@ function UsersView({
   const allCustomers = users.filter((user) => user.role === "CUSTOMER");
   const customers = allCustomers.filter((user) => {
     if (!matchesQuery(user)) return false;
-    if (customerStatus === "ACTIVE") return Boolean(user.active);
-    if (customerStatus === "INACTIVE") return !user.active;
+    const status = String(
+      user.accountStatus ?? (user.active ? "ACTIVE" : "INACTIVE"),
+    );
+    if (customerStatus !== "ALL" && status !== customerStatus) return false;
+    const registeredAt = new Date(String(user.createdAt));
+    if (registeredFrom && registeredAt < new Date(registeredFrom)) return false;
+    if (registeredTo) {
+      const end = new Date(registeredTo);
+      end.setHours(23, 59, 59, 999);
+      if (registeredAt > end) return false;
+    }
     return true;
   });
   const visibleOrganizers = organizers.filter((organizer) => {
@@ -195,7 +214,7 @@ function UsersView({
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search customers, organizers, emails..."
+            placeholder="Search name, email, or mobile..."
             className="h-11 w-full rounded-md border border-border bg-background px-10 text-sm"
           />
         </label>
@@ -213,6 +232,7 @@ function UsersView({
             <option value="ALL">All customers</option>
             <option value="ACTIVE">Active customers</option>
             <option value="INACTIVE">Inactive customers</option>
+            <option value="BLOCKED">Blocked customers</option>
           </select>
           <select
             value={organizerStatus}
@@ -231,6 +251,26 @@ function UsersView({
             <option value="REJECTED">Rejected</option>
             <option value="SUSPENDED">Suspended</option>
           </select>
+        </div>
+        <div className="grid gap-2 sm:grid-cols-2 lg:col-span-2">
+          <label className="grid gap-1 text-xs text-muted">
+            Registered from
+            <input
+              type="date"
+              value={registeredFrom}
+              onChange={(event) => setRegisteredFrom(event.target.value)}
+              className="h-10 rounded-md border border-border bg-background px-3 text-sm text-foreground"
+            />
+          </label>
+          <label className="grid gap-1 text-xs text-muted">
+            Registered to
+            <input
+              type="date"
+              value={registeredTo}
+              onChange={(event) => setRegisteredTo(event.target.value)}
+              className="h-10 rounded-md border border-border bg-background px-3 text-sm text-foreground"
+            />
+          </label>
         </div>
       </section>
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
@@ -252,19 +292,70 @@ function UsersView({
                 <div>
                   <p className="font-medium">{String(user.name)}</p>
                   <p className="text-xs text-muted">{String(user.email)}</p>
+                  <p className="mt-1 text-xs text-muted">
+                    {String(user.phone ?? "No mobile")} · Registered{" "}
+                    {new Date(String(user.createdAt)).toLocaleDateString(
+                      "en-IN",
+                    )}
+                  </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() =>
-                    void update(`/api/admin/users/${String(user._id)}/status`, {
-                      active: !user.active,
-                    })
-                  }
-                  className="inline-flex h-9 items-center gap-1 rounded-md border border-border px-3 text-xs font-semibold"
-                >
-                  <UserCheck className="size-3.5" />
-                  {user.active ? "Deactivate" : "Activate"}
-                </button>
+                <div className="flex flex-wrap justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCustomerId(String(user._id))}
+                    className="grid size-9 place-items-center rounded-md border border-secondary/45 text-secondary"
+                    title="View customer profile"
+                  >
+                    <Eye className="size-4" />
+                  </button>
+                  {user.accountStatus === "BLOCKED" ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void update(
+                          `/api/admin/users/${String(user._id)}/status`,
+                          {
+                            action: "UNBLOCK",
+                          },
+                        )
+                      }
+                      className="inline-flex h-9 items-center gap-1 rounded-md border border-secondary/50 px-3 text-xs font-semibold text-secondary"
+                    >
+                      <UserCheck className="size-3.5" /> Unblock
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void update(
+                          `/api/admin/users/${String(user._id)}/status`,
+                          {
+                            action: user.active ? "DEACTIVATE" : "ACTIVATE",
+                          },
+                        )
+                      }
+                      className="inline-flex h-9 items-center gap-1 rounded-md border border-border px-3 text-xs font-semibold"
+                    >
+                      <UserCheck className="size-3.5" />
+                      {user.active ? "Deactivate" : "Activate"}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void update(
+                        `/api/admin/users/${String(user._id)}/status`,
+                        {
+                          action: "BLOCK",
+                        },
+                      )
+                    }
+                    className="grid size-9 place-items-center rounded-md border border-accent/50 text-accent"
+                    title="Block user"
+                  >
+                    <Ban className="size-4" />
+                  </button>
+                </div>
               </article>
             ))}
             {customers.length === 0 ? (
@@ -284,6 +375,7 @@ function UsersView({
                   organizer={organizer}
                   update={update}
                   mode="approval"
+                  onView={() => setSelectedOrganizerId(String(organizer._id))}
                 />
               ))}
               {pendingOrganizers.length === 0 ? (
@@ -302,6 +394,7 @@ function UsersView({
                   organizer={organizer}
                   update={update}
                   mode="management"
+                  onView={() => setSelectedOrganizerId(String(organizer._id))}
                 />
               ))}
               {managedOrganizers.length === 0 ? (
@@ -313,6 +406,22 @@ function UsersView({
           </div>
         </section>
       </div>
+      {selectedCustomerId ? (
+        <CustomerProfile
+          customerId={selectedCustomerId}
+          request={request}
+          update={update}
+          onClose={() => setSelectedCustomerId("")}
+        />
+      ) : null}
+      {selectedOrganizerId ? (
+        <OrganizerProfile
+          organizerId={selectedOrganizerId}
+          request={request}
+          update={update}
+          onClose={() => setSelectedOrganizerId("")}
+        />
+      ) : null}
     </div>
   );
 }
@@ -328,14 +437,435 @@ function MetricPill({ label, value }: { label: string; value: number }) {
   );
 }
 
+function CustomerProfile({
+  customerId,
+  request,
+  update,
+  onClose,
+}: {
+  customerId: string;
+  request: (path: string, init?: RequestInit) => Promise<AnyRecord>;
+  update: (path: string, body: AnyRecord) => Promise<void>;
+  onClose: () => void;
+}) {
+  const [data, setData] = useState<AnyRecord | null>(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    void request(`/api/admin/users/${customerId}/profile`)
+      .then((result) => active && setData(result))
+      .catch(
+        (loadError) =>
+          active &&
+          setError(
+            loadError instanceof Error
+              ? loadError.message
+              : "Unable to load customer profile.",
+          ),
+      );
+    return () => {
+      active = false;
+    };
+  }, [customerId, request]);
+
+  const user = (data?.user as AnyRecord | undefined) ?? {};
+  const bookings = (data?.bookings as AnyRecord[] | undefined) ?? [];
+  const payments = (data?.payments as AnyRecord[] | undefined) ?? [];
+  const refunds = (data?.refunds as AnyRecord[] | undefined) ?? [];
+  const favorites = (data?.favorites as AnyRecord[] | undefined) ?? [];
+  const reviews = (data?.reviews as AnyRecord[] | undefined) ?? [];
+  const cancellations = (data?.cancellations as AnyRecord[] | undefined) ?? [];
+
+  return (
+    <section className="rounded-md border border-secondary/35 bg-surface p-5 shadow-xl shadow-black/15">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+            Customer profile
+          </p>
+          <h2 className="mt-1 text-xl font-semibold">
+            {String(user.name ?? "Loading customer...")}
+          </h2>
+          <p className="mt-1 text-sm text-muted">
+            {String(user.email ?? "")}
+            {user.phone ? ` · ${String(user.phone)}` : ""}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() =>
+              void update(`/api/admin/users/${customerId}/status`, {
+                action: "RESET_ACCESS",
+              })
+            }
+            className="inline-flex h-9 items-center gap-1 rounded-md border border-secondary/50 px-3 text-xs font-semibold text-secondary"
+          >
+            <RotateCcw className="size-3.5" /> Reset access
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex h-9 items-center gap-1 rounded-md border border-border px-3 text-xs font-semibold text-muted"
+          >
+            <X className="size-3.5" /> Close
+          </button>
+        </div>
+      </div>
+      {error ? <p className="mt-4 text-sm text-accent">{error}</p> : null}
+      {!data && !error ? (
+        <div className="mt-6 grid min-h-32 place-items-center">
+          <LoaderCircle className="size-5 animate-spin text-secondary" />
+        </div>
+      ) : (
+        <div className="mt-6 grid gap-5 xl:grid-cols-2">
+          <HistoryList
+            title={`Booking history (${bookings.length})`}
+            items={bookings}
+            describe={(item) =>
+              `INR ${String((item.pricing as AnyRecord | undefined)?.total ?? 0)} · ${String(item.status)}`
+            }
+          />
+          <HistoryList
+            title={`Payment history (${payments.length})`}
+            items={payments}
+            describe={(item) =>
+              `INR ${String(item.amount ?? 0)} · ${String(item.status)}`
+            }
+          />
+          <HistoryList
+            title={`Refund history (${refunds.length})`}
+            items={refunds}
+            describe={(item) =>
+              `INR ${String(item.approvedAmount ?? item.requestedAmount ?? 0)} · ${String(item.status)}`
+            }
+          />
+          <HistoryList
+            title={`Cancellation history (${cancellations.length})`}
+            items={cancellations}
+            describe={(item) => String(item.status)}
+          />
+          <HistoryList
+            title={`Saved items (${favorites.length})`}
+            items={favorites}
+            describe={(item) => {
+              const saved =
+                (item.event as AnyRecord | null)?.title ??
+                (item.movie as AnyRecord | null)?.title ??
+                (item.venue as AnyRecord | null)?.name ??
+                "Saved item";
+              return String(saved);
+            }}
+          />
+          <HistoryList
+            title={`Reviews (${reviews.length})`}
+            items={reviews}
+            describe={(item) =>
+              `${String(item.rating ?? "-")}/5 · ${String(item.status ?? "PENDING")}`
+            }
+          />
+        </div>
+      )}
+    </section>
+  );
+}
+
+function OrganizerProfile({
+  organizerId,
+  request,
+  update,
+  onClose,
+}: {
+  organizerId: string;
+  request: (path: string, init?: RequestInit) => Promise<AnyRecord>;
+  update: (path: string, body: AnyRecord) => Promise<void>;
+  onClose: () => void;
+}) {
+  const [data, setData] = useState<AnyRecord | null>(null);
+  const [commission, setCommission] = useState(10);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    void request(`/api/admin/organizers/${organizerId}/profile`)
+      .then((result) => {
+        if (!active) return;
+        setData(result);
+        const organizer = result.organizer as AnyRecord | undefined;
+        setCommission(Number(organizer?.commissionRatePercent ?? 10));
+      })
+      .catch(
+        (loadError) =>
+          active &&
+          setError(
+            loadError instanceof Error
+              ? loadError.message
+              : "Unable to load organizer profile.",
+          ),
+      );
+    return () => {
+      active = false;
+    };
+  }, [organizerId, request]);
+
+  const organizer = (data?.organizer as AnyRecord | undefined) ?? {};
+  const organizerUser = (organizer.user as AnyRecord | null) ?? {};
+  const sales = (data?.sales as AnyRecord | undefined) ?? {};
+  const events = (data?.events as AnyRecord[] | undefined) ?? [];
+  const payouts = (data?.payouts as AnyRecord[] | undefined) ?? [];
+  const business = (organizer.business as AnyRecord | null) ?? {};
+  const bank = (organizer.bankDetails as AnyRecord | null) ?? {};
+  const kycDocuments =
+    (organizer.kycDocuments as AnyRecord[] | undefined) ?? [];
+
+  const saveCommission = async () => {
+    try {
+      await update(`/api/admin/organizers/${organizerId}/status`, {
+        status: organizer.verificationStatus,
+        commissionRatePercent: commission,
+      });
+    } catch (saveError) {
+      setError(
+        saveError instanceof Error
+          ? saveError.message
+          : "Unable to save commission.",
+      );
+    }
+  };
+
+  const updateKycStatus = async (kycStatus: "VERIFIED" | "REJECTED") => {
+    try {
+      await update(`/api/admin/organizers/${organizerId}/status`, {
+        status: organizer.verificationStatus,
+        kycStatus,
+      });
+      setData((current) =>
+        current
+          ? {
+              ...current,
+              organizer: { ...organizer, kycStatus },
+            }
+          : current,
+      );
+    } catch (updateError) {
+      setError(
+        updateError instanceof Error
+          ? updateError.message
+          : "Unable to update KYC status.",
+      );
+    }
+  };
+
+  return (
+    <section className="rounded-md border border-secondary/35 bg-surface p-5 shadow-xl shadow-black/15">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+            Organizer profile & verification
+          </p>
+          <h2 className="mt-1 text-xl font-semibold">
+            {String(organizer.organizationName ?? "Loading organizer...")}
+          </h2>
+          <p className="mt-1 text-sm text-muted">
+            {String(organizerUser.name ?? "")} ·{" "}
+            {String(organizerUser.email ?? "")}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="inline-flex h-9 items-center gap-1 rounded-md border border-border px-3 text-xs font-semibold text-muted"
+        >
+          <X className="size-3.5" /> Close
+        </button>
+      </div>
+      {error ? <p className="mt-4 text-sm text-accent">{error}</p> : null}
+      {!data && !error ? (
+        <div className="mt-6 grid min-h-32 place-items-center">
+          <LoaderCircle className="size-5 animate-spin text-secondary" />
+        </div>
+      ) : (
+        <div className="mt-6 grid gap-5 xl:grid-cols-2">
+          <section className="rounded-md border border-border bg-background/45 p-4 text-sm">
+            <h3 className="font-semibold">Business & verification</h3>
+            <dl className="mt-3 grid gap-2 text-muted">
+              <div>
+                Legal name: {String(business.legalName ?? "Not provided")}
+              </div>
+              <div>
+                Registration:{" "}
+                {String(business.registrationNumber ?? "Not provided")}
+              </div>
+              <div>Tax ID: {String(business.taxId ?? "Not provided")}</div>
+              <div>
+                KYC status: {String(organizer.kycStatus ?? "NOT_SUBMITTED")}
+              </div>
+              <div>
+                Verification:{" "}
+                {String(organizer.verificationStatus ?? "PENDING")}
+              </div>
+            </dl>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {kycDocuments.length ? (
+                kycDocuments.map((document) => (
+                  <a
+                    key={String(document._id ?? document.url)}
+                    href={String(document.url)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="rounded-md border border-secondary/50 px-2 py-1 text-xs font-semibold text-secondary"
+                  >
+                    {String(document.type)} document
+                  </a>
+                ))
+              ) : (
+                <span className="text-xs text-muted">
+                  No KYC documents uploaded.
+                </span>
+              )}
+            </div>
+            {kycDocuments.length ? (
+              <div className="mt-3 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => void updateKycStatus("VERIFIED")}
+                  className="inline-flex h-8 items-center rounded-md bg-primary px-3 text-xs font-semibold text-primary-foreground"
+                >
+                  Verify KYC
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void updateKycStatus("REJECTED")}
+                  className="inline-flex h-8 items-center rounded-md border border-accent/50 px-3 text-xs font-semibold text-accent"
+                >
+                  Reject KYC
+                </button>
+              </div>
+            ) : null}
+          </section>
+          <section className="rounded-md border border-border bg-background/45 p-4 text-sm">
+            <h3 className="font-semibold">Bank & settlement details</h3>
+            <dl className="mt-3 grid gap-2 text-muted">
+              <div>
+                Account holder: {String(bank.accountHolder ?? "Not provided")}
+              </div>
+              <div>Bank: {String(bank.bankName ?? "Not provided")}</div>
+              <div>
+                Account ending:{" "}
+                {bank.accountNumberLast4
+                  ? `•••• ${String(bank.accountNumberLast4)}`
+                  : "Not provided"}
+              </div>
+              <div>IFSC: {String(bank.ifscCode ?? "Not provided")}</div>
+              <div>Bank verified: {bank.verified ? "Yes" : "No"}</div>
+            </dl>
+          </section>
+          <section className="rounded-md border border-border bg-background/45 p-4">
+            <h3 className="font-semibold">Revenue performance</h3>
+            <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+              <MetricPill label="Events" value={events.length} />
+              <MetricPill
+                label="Tickets"
+                value={Number(sales.ticketSales ?? 0)}
+              />
+              <MetricPill label="Revenue" value={Number(sales.revenue ?? 0)} />
+              <MetricPill
+                label="Platform commission"
+                value={Number(sales.platformCommission ?? 0)}
+              />
+            </div>
+          </section>
+          <section className="rounded-md border border-border bg-background/45 p-4">
+            <h3 className="font-semibold">Commission settings</h3>
+            <div className="mt-3 flex items-end gap-2">
+              <label className="grid flex-1 gap-1 text-xs text-muted">
+                Platform commission %
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={commission}
+                  onChange={(event) =>
+                    setCommission(Number(event.target.value))
+                  }
+                  className="h-10 rounded-md border border-border bg-surface px-3 text-sm text-foreground"
+                />
+              </label>
+              <button
+                type="button"
+                onClick={() => void saveCommission()}
+                className="premium-button h-10 px-3 text-xs font-semibold"
+              >
+                Save
+              </button>
+            </div>
+            <HistoryList
+              title={`Settlement history (${payouts.length})`}
+              items={payouts}
+              describe={(payout) =>
+                `INR ${String(payout.amount ?? 0)} · ${String(payout.status)}`
+              }
+            />
+          </section>
+          <HistoryList
+            title={`Organizer events (${events.length})`}
+            items={events}
+            describe={(event) =>
+              `${String(event.status)} · ${String(event.approvalStatus)}`
+            }
+          />
+        </div>
+      )}
+    </section>
+  );
+}
+
+function HistoryList({
+  title,
+  items,
+  describe,
+}: {
+  title: string;
+  items: AnyRecord[];
+  describe: (item: AnyRecord) => string;
+}) {
+  return (
+    <section className="rounded-md border border-border bg-background/45 p-4">
+      <h3 className="font-semibold">{title}</h3>
+      <div className="mt-3 grid max-h-64 gap-2 overflow-y-auto pr-1">
+        {items.length ? (
+          items.map((item) => (
+            <div
+              key={String(item._id)}
+              className="flex items-center justify-between gap-3 border-b border-border pb-2 text-sm last:border-0 last:pb-0"
+            >
+              <span className="min-w-0 truncate">{describe(item)}</span>
+              {item.createdAt ? (
+                <span className="shrink-0 text-[11px] text-muted">
+                  {new Date(String(item.createdAt)).toLocaleDateString("en-IN")}
+                </span>
+              ) : null}
+            </div>
+          ))
+        ) : (
+          <p className="text-sm text-muted">No records yet.</p>
+        )}
+      </div>
+    </section>
+  );
+}
+
 function OrganizerCard({
   mode,
   organizer,
   update,
+  onView,
 }: {
   mode: "approval" | "management";
   organizer: AnyRecord;
   update: (path: string, body: AnyRecord) => Promise<void>;
+  onView: () => void;
 }) {
   const user = organizer.user as AnyRecord | null;
   const status = String(organizer.verificationStatus);
@@ -352,6 +882,13 @@ function OrganizerCard({
         <OrganizerStatusBadge status={status} />
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={onView}
+          className="inline-flex h-9 items-center gap-1 rounded-md border border-secondary/50 px-3 text-xs font-semibold text-secondary"
+        >
+          <Eye className="size-3.5" /> Profile
+        </button>
         {mode === "approval" ? (
           <>
             <button
@@ -475,7 +1012,7 @@ function EventsView({
                   </button>
                 </>
               ) : null}
-              {event.status === "DRAFT" &&
+              {event.status !== "PUBLISHED" &&
               event.approvalStatus === "APPROVED" ? (
                 <button
                   type="button"
@@ -492,8 +1029,141 @@ function EventsView({
               ) : null}
             </div>
           </div>
+          <details className="mt-4 rounded-md border border-border bg-background/45 p-3 text-sm">
+            <summary className="cursor-pointer font-semibold text-secondary">
+              Event information & moderation
+            </summary>
+            <div className="mt-3 grid gap-2 text-muted sm:grid-cols-2">
+              <p>
+                Organizer:{" "}
+                {String(
+                  (event.organizer as AnyRecord | null)?.organizationName ??
+                    "-",
+                )}
+              </p>
+              <p>
+                Venue: {String((event.venue as AnyRecord | null)?.name ?? "-")}
+              </p>
+              <p>
+                Category:{" "}
+                {String((event.category as AnyRecord | null)?.name ?? "-")}
+              </p>
+              <p>
+                Age restriction: {String(event.ageRestriction ?? "All ages")}
+              </p>
+              <p className="sm:col-span-2">
+                {String(event.description ?? "No description")}
+              </p>
+            </div>
+          </details>
+          <EventModerationActions event={event} update={update} />
         </article>
       ))}
+    </div>
+  );
+}
+
+function EventModerationActions({
+  event,
+  update,
+}: {
+  event: AnyRecord;
+  update: (path: string, body: AnyRecord) => Promise<void>;
+}) {
+  const [reason, setReason] = useState("");
+  const [publishAt, setPublishAt] = useState("");
+  const path = `/api/admin/events/${String(event._id)}/status`;
+  const action = (name: string, extra: AnyRecord = {}) =>
+    update(path, { action: name, ...extra });
+
+  return (
+    <div className="mt-4 space-y-3 border-t border-border pt-4">
+      <div className="flex flex-wrap gap-2">
+        <input
+          value={reason}
+          onChange={(input) => setReason(input.target.value)}
+          placeholder="Rejection or change-request reason"
+          className="h-9 min-w-56 flex-1 rounded-md border border-border bg-background px-3 text-xs"
+        />
+        <button
+          type="button"
+          onClick={() => void action("REQUEST_CHANGES", { reason })}
+          className="h-9 rounded-md border border-warning/50 px-3 text-xs font-semibold text-warning"
+        >
+          Request changes
+        </button>
+        <button
+          type="button"
+          onClick={() => void action("DUPLICATE")}
+          className="h-9 rounded-md border border-border px-3 text-xs font-semibold"
+        >
+          Duplicate
+        </button>
+        <button
+          type="button"
+          onClick={() => void action("ARCHIVE")}
+          className="h-9 rounded-md border border-border px-3 text-xs font-semibold"
+        >
+          Archive
+        </button>
+        {event.status === "PUBLISHED" ? (
+          <>
+            <button
+              type="button"
+              onClick={() => void action("UNPUBLISH")}
+              className="h-9 rounded-md border border-border px-3 text-xs font-semibold"
+            >
+              Unpublish
+            </button>
+            <button
+              type="button"
+              onClick={() => void action("CANCEL")}
+              className="h-9 rounded-md border border-accent/50 px-3 text-xs font-semibold text-accent"
+            >
+              Cancel event
+            </button>
+          </>
+        ) : null}
+      </div>
+      {event.approvalStatus === "APPROVED" && event.status !== "PUBLISHED" ? (
+        <div className="flex flex-wrap items-end gap-2">
+          <label className="grid gap-1 text-xs text-muted">
+            Schedule publishing
+            <input
+              type="datetime-local"
+              value={publishAt}
+              onChange={(input) => setPublishAt(input.target.value)}
+              className="h-9 rounded-md border border-border bg-background px-2 text-xs text-foreground"
+            />
+          </label>
+          <button
+            type="button"
+            disabled={!publishAt}
+            onClick={() =>
+              void action("SCHEDULE_PUBLISH", { scheduledPublishAt: publishAt })
+            }
+            className="h-9 rounded-md border border-secondary/50 px-3 text-xs font-semibold text-secondary disabled:opacity-50"
+          >
+            Schedule
+          </button>
+        </div>
+      ) : null}
+      <div className="flex flex-wrap gap-2">
+        {(["FEATURE", "TRENDING", "RECOMMENDED"] as const).map((flag) => {
+          const enabled = Boolean(event[flag.toLowerCase()]);
+          return (
+            <button
+              key={flag}
+              type="button"
+              onClick={() => void action(flag, { enabled: !enabled })}
+              className={`h-8 rounded-md border px-3 text-xs font-semibold ${enabled ? "border-secondary/60 text-secondary" : "border-border text-muted"}`}
+            >
+              {enabled ? "Remove " : "Mark "}
+              {flag.toLowerCase()}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -592,27 +1262,248 @@ function AuditView({ data }: { data: AnyRecord }) {
 }
 function BookingsView({ data }: { data: AnyRecord }) {
   const bookings = (data.bookings as AnyRecord[] | undefined) ?? [];
+  const payments = (data.payments as AnyRecord[] | undefined) ?? [];
+  const paymentByBookingId = new Map(
+    payments.map((payment) => {
+      const booking = payment.booking as AnyRecord | string | null;
+      return [
+        String(
+          typeof booking === "object" && booking !== null
+            ? booking._id
+            : (booking ?? ""),
+        ),
+        payment,
+      ];
+    }),
+  );
+  const money = (value: unknown, currency = "INR") =>
+    `${currency === "INR" ? "₹" : `${currency} `}${Number(value ?? 0).toLocaleString("en-IN")}`;
+  const dateTime = (value: unknown) =>
+    value ? new Date(String(value)).toLocaleString("en-IN") : "Not scheduled";
+  const operationalStatus = (booking: AnyRecord, payment?: AnyRecord) => {
+    const ticket = booking.ticket as AnyRecord | null;
+    if (ticket?.checkedIn) return "CHECKED-IN";
+    if (booking.status === "REFUNDED") return "REFUNDED";
+    if (booking.status === "REFUND_PENDING") return "PARTIALLY REFUNDED";
+    if (payment?.status === "FAILED") return "FAILED";
+    if (["CREATED", "PENDING"].includes(String(payment?.status)))
+      return "PAYMENT PROCESSING";
+    return String(booking.status ?? "PENDING");
+  };
+
   return (
-    <div className="mt-7 grid gap-3">
-      {bookings.map((booking) => (
-        <article
-          key={String(booking._id)}
-          className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-surface p-4"
-        >
+    <div className="mt-7 space-y-8">
+      <section>
+        <div className="flex flex-wrap items-end justify-between gap-2">
           <div>
-            <p className="font-medium">
-              {String((booking.user as AnyRecord | null)?.name ?? "Customer")}
-            </p>
+            <h2 className="text-lg font-semibold">Bookings</h2>
             <p className="text-sm text-muted">
-              INR {String((booking.pricing as AnyRecord | null)?.total ?? 0)} ·{" "}
-              {String(booking.status)}
+              Complete customer, ticket, show, and payment breakdowns.
             </p>
           </div>
-          <span className="text-xs text-muted">
-            {new Date(String(booking.createdAt)).toLocaleString("en-IN")}
+          <span className="text-sm text-muted">
+            {bookings.length} recent records
           </span>
-        </article>
-      ))}
+        </div>
+        <div className="mt-4 grid gap-4">
+          {bookings.length ? (
+            bookings.map((booking) => {
+              const user = booking.user as AnyRecord | null;
+              const show = booking.show as AnyRecord | null;
+              const pricing = booking.pricing as AnyRecord | null;
+              const seats = (booking.seats as AnyRecord[] | undefined) ?? [];
+              const payment = paymentByBookingId.get(String(booking._id));
+              const event = show?.event as AnyRecord | null;
+              const movie = show?.movie as AnyRecord | null;
+              const venue = show?.venue as AnyRecord | null;
+              const cinema = show?.cinema as AnyRecord | null;
+              const ticket = booking.ticket as AnyRecord | null;
+              const status = operationalStatus(booking, payment);
+              const currency = String(pricing?.currency ?? "INR");
+              return (
+                <article
+                  key={String(booking._id)}
+                  className="rounded-lg border border-border bg-surface p-5 shadow-sm"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-4">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+                        Booking ID · {String(booking._id)}
+                      </p>
+                      <h3 className="mt-1 font-semibold">
+                        {String(
+                          event?.title ?? movie?.title ?? "Scheduled content",
+                        )}
+                      </h3>
+                      <p className="mt-1 text-sm text-muted">
+                        {String(venue?.name ?? cinema?.name ?? "Venue pending")}{" "}
+                        · {dateTime(show?.startTime)}
+                      </p>
+                    </div>
+                    <span className="rounded-full border border-secondary/40 bg-secondary/10 px-3 py-1 text-xs font-semibold text-secondary">
+                      {status}
+                    </span>
+                  </div>
+                  <div className="grid gap-5 pt-4 sm:grid-cols-2 xl:grid-cols-4">
+                    <div className="space-y-1 text-sm">
+                      <p className="font-semibold">Customer</p>
+                      <p>{String(user?.name ?? "Customer")}</p>
+                      <p className="text-muted">
+                        {String(user?.email ?? "Email unavailable")}
+                      </p>
+                      <p className="text-muted">
+                        {String(user?.phone ?? "Mobile unavailable")}
+                      </p>
+                    </div>
+                    <div className="space-y-1 text-sm">
+                      <p className="font-semibold">Tickets</p>
+                      <p>
+                        {seats.length} ticket{seats.length === 1 ? "" : "s"} ·{" "}
+                        {seats.map((seat) => String(seat.seatId)).join(", ") ||
+                          "Seat pending"}
+                      </p>
+                      <p className="text-muted">
+                        {seats
+                          .map(
+                            (seat) =>
+                              `${String(seat.category)} (${money(seat.price, currency)})`,
+                          )
+                          .join(" · ")}
+                      </p>
+                      <p className="text-muted">
+                        {ticket
+                          ? `Ticket ${String(ticket.ticketId)}${ticket.checkedInAt ? ` · checked in ${dateTime(ticket.checkedInAt)}` : ""}`
+                          : "Ticket not issued"}
+                      </p>
+                    </div>
+                    <div className="space-y-1 text-sm">
+                      <p className="font-semibold">Price breakdown</p>
+                      <p className="text-muted">
+                        Tickets {money(pricing?.basePrice, currency)}
+                      </p>
+                      <p className="text-muted">
+                        Tax {money(pricing?.tax, currency)} · Fee{" "}
+                        {money(pricing?.convenienceFee, currency)}
+                      </p>
+                      <p className="text-muted">
+                        Discount −{money(pricing?.discount, currency)}
+                      </p>
+                      <p className="font-semibold">
+                        Paid {money(pricing?.total, currency)}
+                      </p>
+                    </div>
+                    <div className="space-y-1 text-sm">
+                      <p className="font-semibold">Payment</p>
+                      <p>{String(payment?.status ?? "NOT STARTED")}</p>
+                      <p className="text-muted">
+                        {String(
+                          payment?.paymentMethod ?? "Method awaiting gateway",
+                        )}
+                      </p>
+                      <p className="text-muted">
+                        Created {dateTime(booking.createdAt)}
+                      </p>
+                      <p className="text-muted">
+                        Show {String(show?.bookingStatus ?? "Not scheduled")}
+                      </p>
+                    </div>
+                  </div>
+                </article>
+              );
+            })
+          ) : (
+            <p className="rounded-md border border-dashed border-border p-5 text-sm text-muted">
+              No bookings have been created yet.
+            </p>
+          )}
+        </div>
+      </section>
+
+      <section>
+        <h2 className="text-lg font-semibold">Transactions</h2>
+        <p className="mt-1 text-sm text-muted">
+          Gateway-confirmed transaction history. Booking confirmation is driven
+          only by the verified Razorpay webhook.
+        </p>
+        <div className="mt-4 overflow-x-auto rounded-lg border border-border">
+          <table className="min-w-full text-left text-sm">
+            <thead className="border-b border-border bg-surface text-xs uppercase tracking-wide text-muted">
+              <tr>
+                <th className="px-4 py-3 font-medium">Transaction</th>
+                <th className="px-4 py-3 font-medium">Gateway IDs</th>
+                <th className="px-4 py-3 font-medium">Method / status</th>
+                <th className="px-4 py-3 font-medium">Amount</th>
+                <th className="px-4 py-3 font-medium">Gateway response</th>
+                <th className="px-4 py-3 font-medium">Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {payments.length ? (
+                payments.map((payment) => {
+                  const response = payment.gatewayResponse as AnyRecord | null;
+                  return (
+                    <tr
+                      key={String(payment._id)}
+                      className="border-b border-border last:border-0"
+                    >
+                      <td className="px-4 py-3 font-medium">
+                        {String(payment._id)}
+                      </td>
+                      <td className="px-4 py-3 text-muted">
+                        <p>
+                          {String(
+                            payment.gatewayPaymentId ?? "Payment ID pending",
+                          )}
+                        </p>
+                        <p className="mt-1 text-xs">
+                          Order {String(payment.gatewayOrderId ?? "-")}
+                        </p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p>
+                          {String(payment.paymentMethod ?? "Awaiting gateway")}
+                        </p>
+                        <p className="mt-1 text-xs text-muted">
+                          {String(payment.status ?? "CREATED")}
+                        </p>
+                      </td>
+                      <td className="px-4 py-3 font-medium">
+                        {money(
+                          payment.amount,
+                          String(payment.currency ?? "INR"),
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-muted">
+                        <p>
+                          {String(response?.event ?? "No webhook response yet")}
+                        </p>
+                        {response?.errorDescription ? (
+                          <p className="mt-1 text-xs">
+                            {String(response.errorDescription)}
+                          </p>
+                        ) : null}
+                      </td>
+                      <td className="px-4 py-3 text-muted">
+                        {dateTime(
+                          payment.paidAt ??
+                            payment.failedAt ??
+                            payment.createdAt,
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={6} className="px-4 py-5 text-muted">
+                    No payment transactions yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   );
 }

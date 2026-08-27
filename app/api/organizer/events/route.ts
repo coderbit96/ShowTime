@@ -38,6 +38,7 @@ const eventSchema = z
     durationMinutes: z.coerce.number().int().positive().optional(),
     language: z.array(z.string().trim()).default([]),
     ageRestriction: z.string().trim().max(100).default("All ages"),
+    termsAndConditions: z.string().trim().max(8000).optional(),
     ticketLimit: z.coerce.number().int().min(1).max(20).default(10),
   })
   .refine((value) => value.endsAt > value.startsAt, {
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
       ...input,
       organizer: actor.organizerId,
       slug: `${slugify(input.title)}-${Date.now().toString(36)}`,
-      status: "DRAFT",
+      status: "SUBMITTED",
       approvalStatus: "PENDING",
     });
     await writeAuditLog({

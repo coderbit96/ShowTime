@@ -207,7 +207,25 @@ export type RazorpayWebhookPayment = {
   orderId: string;
   amount: number;
   currency: string;
+  method?: string;
+  errorCode?: string;
+  errorDescription?: string;
 };
+
+function toPaymentMethod(method?: string) {
+  switch (method?.toLowerCase()) {
+    case "upi":
+      return "UPI";
+    case "card":
+      return "CARD";
+    case "netbanking":
+      return "NET_BANKING";
+    case "wallet":
+      return "WALLET";
+    default:
+      return "OTHER";
+  }
+}
 
 export async function processRazorpayWebhook(
   paymentEvent: RazorpayWebhookPayment,
@@ -264,6 +282,14 @@ export async function processRazorpayWebhook(
               gatewayPaymentId: paymentEvent.paymentId,
               status: "SUCCESS",
               paidAt: new Date(),
+              ...(paymentEvent.method
+                ? { paymentMethod: toPaymentMethod(paymentEvent.method) }
+                : {}),
+              gatewayResponse: {
+                eventId: paymentEvent.eventId,
+                event: paymentEvent.event,
+                receivedAt: new Date(),
+              },
             },
           },
           { session },
@@ -363,6 +389,20 @@ export async function processRazorpayWebhook(
               gatewayPaymentId: paymentEvent.paymentId,
               status: "FAILED",
               failedAt: new Date(),
+              ...(paymentEvent.method
+                ? { paymentMethod: toPaymentMethod(paymentEvent.method) }
+                : {}),
+              gatewayResponse: {
+                eventId: paymentEvent.eventId,
+                event: paymentEvent.event,
+                receivedAt: new Date(),
+                ...(paymentEvent.errorCode
+                  ? { errorCode: paymentEvent.errorCode }
+                  : {}),
+                ...(paymentEvent.errorDescription
+                  ? { errorDescription: paymentEvent.errorDescription }
+                  : {}),
+              },
             },
           },
           { session },

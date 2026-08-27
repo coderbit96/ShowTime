@@ -1,6 +1,15 @@
 import { Types } from "mongoose";
 import { connectToDatabase } from "@/lib/mongodb/connect";
-import { Booking, Event, Organizer, Payment, Refund, User } from "@/models";
+import {
+  AuditLog,
+  Booking,
+  Event,
+  Movie,
+  Organizer,
+  Payment,
+  Refund,
+  User,
+} from "@/models";
 
 type AnalyticsScope = { role: "ADMIN" | "ORGANIZER"; organizerId?: string };
 
@@ -80,13 +89,17 @@ export async function getDashboardAnalytics(scope: AnalyticsScope) {
     status: { $in: ["CONFIRMED", "REFUND_PENDING"] },
   };
   const paymentSuccessMatch = { status: "SUCCESS" };
+  const now = new Date();
+  const startOfToday = new Date(now);
+  startOfToday.setHours(0, 0, 0, 0);
+  const endOfToday = new Date(startOfToday);
+  endOfToday.setDate(endOfToday.getDate() + 1);
 
   const [
     bookingKpi,
     paymentKpi,
     customerCount,
     organizerCount,
-    eventCount,
     pendingEventCount,
     refundKpi,
     dailyRevenue,
@@ -97,6 +110,22 @@ export async function getDashboardAnalytics(scope: AnalyticsScope) {
     popularCategories,
     popularCities,
     organizerPerformance,
+    totalRegisteredUsers,
+    totalOrganizers,
+    totalEvents,
+    totalMovies,
+    activeEventCount,
+    upcomingEventCount,
+    completedEventCount,
+    todayKpi,
+    cancelledBookingCount,
+    pendingOrganizerCount,
+    pendingRefundCount,
+    weeklyRevenue,
+    topVenues,
+    topCinemas,
+    recentTransactions,
+    recentAdminActivity,
   ] = await Promise.all([
     Booking.aggregate([
       ...showLookup(scope),
@@ -129,17 +158,16 @@ export async function getDashboardAnalytics(scope: AnalyticsScope) {
       : Promise.resolve(1),
     Event.countDocuments(
       scope.role === "ADMIN"
-        ? { active: true }
-        : { ...organizerFilter, active: true },
-    ),
-    Event.countDocuments(
-      scope.role === "ADMIN"
         ? { approvalStatus: "PENDING", active: true }
         : { ...organizerFilter, approvalStatus: "PENDING", active: true },
     ),
     Refund.aggregate([
       ...bookingShowLookup(scope),
-      { $match: { status: { $in: ["SUCCESS", "PROCESSING"] } } },
+      {
+        $match: {
+          status: { $in: ["SUCCESS", "REFUNDED", "PROCESSING"] },
+        },
+      },
       {
         $group: {
           _id: null,
@@ -172,6 +200,7 @@ export async function getDashboardAnalytics(scope: AnalyticsScope) {
           _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
           revenue: { $sum: "$pricing.total" },
           bookings: { $sum: 1 },
+          tickets: { $sum: { $size: "$seats" } },
         },
       },
       { $sort: { _id: 1 } },
@@ -323,6 +352,130 @@ export async function getDashboardAnalytics(scope: AnalyticsScope) {
           { $limit: 10 },
         ])
       : Promise.resolve([]),
+    scope.role === "ADMIN" ? User.countDocuments({}) : Promise.resolve(null),
+    scope.role === "ADMIN"
+      ? Organizer.countDocuments({})
+      : Promise.resolve(null),
+    Event.countDocuments(scope.role === "ADMIN" ? {} : organizerFilter),
+    scope.role === "ADMIN" ? Movie.countDocuments({}) : Promise.resolve(null),
+    Event.countDocuments({
+      ...(scope.role === "ORGANIZER" ? organizerFilter : {}),
+      active: true,
+      status: "PUBLISHED",
+      startsAt: { $lte: now },
+      endsAt: { $gte: now },
+    }),
+    Event.countDocuments({
+      ...(scope.role === "ORGANIZER" ? organizerFilter : {}),
+      active: true,
+      status: "PUBLISHED",
+      startsAt: { $gt: now },
+    }),
+    Event.countDocuments({
+      ...(scope.role === "ORGANIZER" ? organizerFilter : {}),
+      $or: [{ status: "COMPLETED" }, { endsAt: { $lt: now } }],
+    }),
+    Booking.aggregate([
+      ...showLookup(scope),
+      {
+        $match: {
+          ...bookingStatusMatch,
+          createdAt: { $gte: startOfToday, $lt: endOfToday },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          bookings: { $sum: 1 },
+          revenue: { $sum: "$pricing.total" },
+        },
+      },
+    ]),
+    Booking.countDocuments({ status: "CANCELLED" }),
+    scope.role === "ADMIN"
+      ? Organizer.countDocuments({ verificationStatus: "PENDING" })
+      : Promise.resolve(null),
+    scope.role === "ADMIN"
+      ? Refund.countDocuments({ status: "REQUESTED" })
+      : Promise.resolve(null),
+    Booking.aggregate([
+      ...showLookup(scope),
+      { $match: bookingStatusMatch },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-W%U", date: "$createdAt" },
+          },
+          revenue: { $sum: "$pricing.total" },
+          bookings: { $sum: 1 },
+          tickets: { $sum: { $size: "$seats" } },
+        },
+      },
+      { $sort: { _id: 1 } },
+      { $limit: 12 },
+    ]),
+    Booking.aggregate([
+      ...showLookup(scope),
+      { $match: bookingStatusMatch },
+      {
+        $lookup: {
+          from: "venues",
+          localField: "showRecord.venue",
+          foreignField: "_id",
+          as: "venue",
+        },
+      },
+      { $unwind: { path: "$venue", preserveNullAndEmptyArrays: false } },
+      {
+        $group: {
+          _id: "$venue.name",
+          bookings: { $sum: 1 },
+          revenue: { $sum: "$pricing.total" },
+        },
+      },
+      { $sort: { bookings: -1, revenue: -1 } },
+      { $limit: 10 },
+    ]),
+    Booking.aggregate([
+      ...showLookup(scope),
+      { $match: bookingStatusMatch },
+      {
+        $lookup: {
+          from: "cinemas",
+          localField: "showRecord.cinema",
+          foreignField: "_id",
+          as: "cinema",
+        },
+      },
+      { $unwind: { path: "$cinema", preserveNullAndEmptyArrays: false } },
+      {
+        $group: {
+          _id: "$cinema.name",
+          bookings: { $sum: 1 },
+          revenue: { $sum: "$pricing.total" },
+        },
+      },
+      { $sort: { bookings: -1, revenue: -1 } },
+      { $limit: 10 },
+    ]),
+    scope.role === "ADMIN"
+      ? Payment.find({})
+          .populate({
+            path: "booking",
+            select: "user status",
+            populate: { path: "user", select: "name email" },
+          })
+          .sort({ createdAt: -1 })
+          .limit(8)
+          .lean()
+      : Promise.resolve([]),
+    scope.role === "ADMIN"
+      ? AuditLog.find({})
+          .populate("actor", "name email")
+          .sort({ createdAt: -1 })
+          .limit(8)
+          .lean()
+      : Promise.resolve([]),
   ]);
 
   const bookings = bookingKpi[0] ?? {};
@@ -338,9 +491,20 @@ export async function getDashboardAnalytics(scope: AnalyticsScope) {
       successfulPayments: payments.successfulPayments ?? 0,
       totalBookings: bookings.totalBookings ?? 0,
       ticketSales: bookings.ticketSales ?? 0,
-      activeEvents: eventCount,
       totalCustomers: scope.role === "ADMIN" ? customerCount : null,
       totalOrganizers: scope.role === "ADMIN" ? organizerCount : null,
+      totalRegisteredUsers,
+      allOrganizers: totalOrganizers,
+      totalEvents,
+      totalMovies,
+      activeEvents: activeEventCount,
+      upcomingEvents: upcomingEventCount,
+      completedEvents: completedEventCount,
+      todayBookings: todayKpi[0]?.bookings ?? 0,
+      todayRevenue: todayKpi[0]?.revenue ?? 0,
+      cancelledBookings: cancelledBookingCount,
+      pendingOrganizers: pendingOrganizerCount,
+      pendingRefunds: pendingRefundCount,
       pendingEvents: pendingEventCount,
       refundAmount: refunds.refundAmount ?? 0,
       refundCount: refunds.refundCount ?? 0,
@@ -359,6 +523,7 @@ export async function getDashboardAnalytics(scope: AnalyticsScope) {
     },
     charts: {
       dailyRevenue,
+      weeklyRevenue,
       monthlyRevenue,
       bookingTrends,
       popularEvents,
@@ -366,6 +531,10 @@ export async function getDashboardAnalytics(scope: AnalyticsScope) {
       popularCategories,
       popularCities,
       organizerPerformance,
+      topVenues,
+      topCinemas,
+      recentTransactions,
+      recentAdminActivity,
     },
   } satisfies Record<string, unknown>;
   analyticsCache.set(cacheKey, { expiresAt: Date.now() + CACHE_TTL_MS, value });

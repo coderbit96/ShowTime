@@ -24,6 +24,12 @@ export const venueSchema = z.object({
     "THEATRE",
     "OTHER",
   ]),
+  parkingAvailable: z.boolean().optional().default(false),
+  seatingType: z
+    .enum(["FIXED", "FLEXIBLE", "STANDING", "MIXED"])
+    .optional()
+    .default("FIXED"),
+  assignedOrganizer: objectId.optional(),
   amenities: z.array(z.string().trim().min(1).max(80)).max(30).default([]),
   contact: optionalContact.default({}),
   images: z.array(z.string().url()).max(12).default([]),
@@ -63,6 +69,7 @@ export const screenSchema = z
 
 export const updateVenueSchema = venueSchema.partial().extend({
   approvalStatus: z.enum(["PENDING", "APPROVED", "REJECTED"]).optional(),
+  operationalStatus: z.enum(["ACTIVE", "INACTIVE", "MAINTENANCE"]).optional(),
   active: z.boolean().optional(),
 });
 export const updateCinemaSchema = cinemaSchema

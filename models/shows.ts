@@ -56,6 +56,8 @@ const ShowSchema = new Schema(
     date: { type: Date, required: true, index: true },
     startTime: { type: Date, required: true, index: true },
     endTime: { type: Date, required: true },
+    bookingOpensAt: { type: Date, index: true },
+    bookingClosesAt: { type: Date, index: true },
     pricing: { type: [PriceSchema], required: true },
     bookingLimits: {
       maxSeatsPerBooking: { type: Number, required: true, min: 1, default: 10 },

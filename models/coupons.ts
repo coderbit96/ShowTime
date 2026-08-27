@@ -18,7 +18,11 @@ const CouponSchema = new Schema(
     usedCount: { type: Number, default: 0, min: 0 },
     perUserLimit: { type: Number, required: true, min: 1, default: 1 },
     applicableEvents: [{ type: Schema.Types.ObjectId, ref: "Event" }],
+    applicableMovies: [{ type: Schema.Types.ObjectId, ref: "Movie" }],
     applicableCategories: [{ type: Schema.Types.ObjectId, ref: "Category" }],
+    applicableOrganizers: [{ type: Schema.Types.ObjectId, ref: "Organizer" }],
+    applicableCities: [{ type: Schema.Types.ObjectId, ref: "City" }],
+    newUserOnly: { type: Boolean, default: false, index: true },
     active: { type: Boolean, default: true, index: true },
     flashSaleActive: { type: Boolean, default: false, index: true },
     flashSaleLabel: { type: String, trim: true, default: "FLASH SALE" },
@@ -31,7 +35,11 @@ const CouponSchema = new Schema(
 CouponSchema.index({ code: 1 }, { unique: true });
 CouponSchema.index({ active: 1, startDate: 1, expiryDate: 1 });
 CouponSchema.index({ applicableEvents: 1, active: 1 });
+CouponSchema.index({ applicableMovies: 1, active: 1 });
 CouponSchema.index({ applicableCategories: 1, active: 1 });
+CouponSchema.index({ applicableOrganizers: 1, active: 1 });
+CouponSchema.index({ applicableCities: 1, active: 1 });
+CouponSchema.index({ newUserOnly: 1, active: 1, startDate: 1, expiryDate: 1 });
 CouponSchema.index({
   flashSaleActive: 1,
   active: 1,

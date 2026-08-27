@@ -23,7 +23,9 @@ export async function POST(request: NextRequest) {
     };
     const showId = body.showId ?? "";
     const summary = await getBookingSummary(user.id, showId, body.lockId ?? "");
-    const show = await Show.findById(showId).select("event category").lean();
+    const show = await Show.findById(showId)
+      .select("event movie category organizer city")
+      .lean();
     if (!show)
       return NextResponse.json(
         { error: "This show is no longer available." },
@@ -33,7 +35,10 @@ export async function POST(request: NextRequest) {
       code: body.code ?? "",
       userId: user.id,
       eventId: show.event?.toString(),
+      movieId: show.movie?.toString(),
       categoryId: show.category?.toString(),
+      organizerId: show.organizer?.toString(),
+      cityId: show.city?.toString(),
       seats: summary.seats,
     });
     return NextResponse.json({

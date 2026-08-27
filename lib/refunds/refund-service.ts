@@ -72,6 +72,7 @@ const refundRequestSchema = z.object({
   bookingId: objectId,
   idempotencyKey: z.string().trim().min(16).max(128),
   manualReview: z.boolean().optional().default(false),
+  reason: z.string().trim().min(3).max(500).optional(),
 });
 
 function isDuplicateKeyError(error: unknown) {
@@ -154,7 +155,16 @@ export async function requestRefund(
 
       const activeRefund = await Refund.exists({
         booking: booking._id,
-        status: { $in: ["REQUESTED", "APPROVED", "PROCESSING", "SUCCESS"] },
+        status: {
+          $in: [
+            "REQUESTED",
+            "UNDER_REVIEW",
+            "APPROVED",
+            "PROCESSING",
+            "REFUNDED",
+            "SUCCESS",
+          ],
+        },
       }).session(session);
       if (activeRefund)
         throw new RefundFlowError(
@@ -170,6 +180,14 @@ export async function requestRefund(
             requestedAmount: calculation.eligible
               ? calculation.amount
               : booking.pricing.total,
+            cancellationFee: Math.max(
+              0,
+              booking.pricing.total -
+                (calculation.eligible
+                  ? calculation.amount
+                  : booking.pricing.total),
+            ),
+            reason: parsed.data.reason ?? "Customer cancellation",
             status: "REQUESTED",
             cancellationPolicyApplied: calculation.eligible
               ? calculation.policyApplied
@@ -198,7 +216,16 @@ export async function requestRefund(
     if (isDuplicateKeyError(error)) {
       const activeRefund = await Refund.findOne({
         booking: parsed.data.bookingId,
-        status: { $in: ["REQUESTED", "APPROVED", "PROCESSING", "SUCCESS"] },
+        status: {
+          $in: [
+            "REQUESTED",
+            "UNDER_REVIEW",
+            "APPROVED",
+            "PROCESSING",
+            "REFUNDED",
+            "SUCCESS",
+          ],
+        },
       }).lean();
       if (activeRefund)
         throw new RefundFlowError(
@@ -231,30 +258,44 @@ const razorpayRefundExecutor: GatewayRefundExecutor = async ({
   return { id: result.id };
 };
 
+function validRefundAmount(amount: number | undefined) {
+  return (
+    amount === undefined ||
+    (typeof amount === "number" && Number.isFinite(amount) && amount >= 0)
+  );
+}
+
 export async function approveRefund(
   adminId: string,
   refundId: string,
   approvedAmount?: number,
   executeGatewayRefund: GatewayRefundExecutor = razorpayRefundExecutor,
+  adminNote?: string,
 ) {
   if (!objectId.safeParse(refundId).success)
     throw new RefundFlowError("Invalid refund ID.");
+  if (!validRefundAmount(approvedAmount))
+    throw new RefundFlowError(
+      "Approved amount must be a valid positive amount.",
+    );
   await connectToDatabase();
 
   const requested = await Refund.findOneAndUpdate(
-    { _id: refundId, status: "REQUESTED" },
+    { _id: refundId, status: { $in: ["REQUESTED", "UNDER_REVIEW"] } },
     {
       $set: {
         status: "PROCESSING",
         adminApprover: adminId,
+        reviewedAt: new Date(),
         ...(approvedAmount === undefined ? {} : { approvedAmount }),
+        ...(adminNote?.trim() ? { adminNote: adminNote.trim() } : {}),
       },
     },
     { returnDocument: "after" },
   ).lean();
   if (!requested) {
     const existing = await Refund.findById(refundId).lean();
-    if (existing?.status === "SUCCESS")
+    if (existing?.status === "REFUNDED" || existing?.status === "SUCCESS")
       return { refund: existing, replayed: true };
     throw new RefundFlowError(
       "This refund is no longer awaiting approval.",
@@ -265,7 +306,7 @@ export async function approveRefund(
   if (amount < 0 || amount > requested.requestedAmount) {
     await Refund.updateOne(
       { _id: requested._id },
-      { $set: { status: "REQUESTED" } },
+      { $set: { status: "UNDER_REVIEW" } },
     );
     throw new RefundFlowError(
       "Approved amount must be within the requested amount.",
@@ -279,7 +320,12 @@ export async function approveRefund(
   if (!payment?.gatewayPaymentId) {
     await Refund.updateOne(
       { _id: requested._id },
-      { $set: { status: "FAILED" } },
+      {
+        $set: {
+          status: "FAILED",
+          failureReason: "The successful gateway payment was not found.",
+        },
+      },
     );
     throw new RefundFlowError(
       "The successful gateway payment was not found.",
@@ -297,7 +343,13 @@ export async function approveRefund(
   } catch (error) {
     await Refund.updateOne(
       { _id: requested._id, status: "PROCESSING" },
-      { $set: { status: "FAILED" } },
+      {
+        $set: {
+          status: "FAILED",
+          failureReason:
+            error instanceof Error ? error.message : "Gateway refund failed.",
+        },
+      },
     );
     await Booking.updateOne(
       { _id: requested.booking, status: "REFUND_PENDING" },
@@ -317,7 +369,7 @@ export async function approveRefund(
         { _id: requested._id, status: "PROCESSING" },
         {
           $set: {
-            status: "SUCCESS",
+            status: "REFUNDED",
             approvedAmount: amount,
             gatewayRefundId: gatewayRefund.id,
             processedAt: new Date(),
@@ -372,13 +424,68 @@ export async function approveRefund(
   }
 }
 
-export async function rejectRefund(adminId: string, refundId: string) {
+export async function markRefundUnderReview(
+  adminId: string,
+  refundId: string,
+  adminNote?: string,
+) {
   if (!objectId.safeParse(refundId).success)
     throw new RefundFlowError("Invalid refund ID.");
   await connectToDatabase();
   const refund = await Refund.findOneAndUpdate(
     { _id: refundId, status: "REQUESTED" },
-    { $set: { status: "REJECTED", adminApprover: adminId } },
+    {
+      $set: {
+        status: "UNDER_REVIEW",
+        adminApprover: adminId,
+        reviewedAt: new Date(),
+        ...(adminNote?.trim() ? { adminNote: adminNote.trim() } : {}),
+      },
+    },
+    { returnDocument: "after" },
+  ).lean();
+  if (!refund)
+    throw new RefundFlowError("This refund is no longer awaiting review.", 409);
+  return refund;
+}
+
+export async function saveRefundNote(
+  adminId: string,
+  refundId: string,
+  adminNote: string,
+) {
+  if (!objectId.safeParse(refundId).success)
+    throw new RefundFlowError("Invalid refund ID.");
+  const note = adminNote.trim();
+  if (!note) throw new RefundFlowError("Enter a refund note.");
+  await connectToDatabase();
+  const refund = await Refund.findByIdAndUpdate(
+    refundId,
+    { $set: { adminApprover: adminId, adminNote: note } },
+    { returnDocument: "after" },
+  ).lean();
+  if (!refund) throw new RefundFlowError("Refund request was not found.", 404);
+  return refund;
+}
+
+export async function rejectRefund(
+  adminId: string,
+  refundId: string,
+  adminNote?: string,
+) {
+  if (!objectId.safeParse(refundId).success)
+    throw new RefundFlowError("Invalid refund ID.");
+  await connectToDatabase();
+  const refund = await Refund.findOneAndUpdate(
+    { _id: refundId, status: { $in: ["REQUESTED", "UNDER_REVIEW"] } },
+    {
+      $set: {
+        status: "REJECTED",
+        adminApprover: adminId,
+        reviewedAt: new Date(),
+        ...(adminNote?.trim() ? { adminNote: adminNote.trim() } : {}),
+      },
+    },
     { returnDocument: "after" },
   ).lean();
   if (!refund)
@@ -391,4 +498,53 @@ export async function rejectRefund(adminId: string, refundId: string) {
     { $set: { status: "CONFIRMED" } },
   );
   return refund;
+}
+
+export async function retryFailedRefund(
+  adminId: string,
+  refundId: string,
+  approvedAmount?: number,
+  adminNote?: string,
+) {
+  if (!objectId.safeParse(refundId).success)
+    throw new RefundFlowError("Invalid refund ID.");
+  if (!validRefundAmount(approvedAmount))
+    throw new RefundFlowError(
+      "Approved amount must be a valid positive amount.",
+    );
+  await connectToDatabase();
+  const refund = await Refund.findOneAndUpdate(
+    { _id: refundId, status: "FAILED" },
+    {
+      $set: {
+        status: "UNDER_REVIEW",
+        adminApprover: adminId,
+        reviewedAt: new Date(),
+        failureReason: undefined,
+        ...(adminNote?.trim() ? { adminNote: adminNote.trim() } : {}),
+      },
+    },
+    { returnDocument: "after" },
+  ).lean();
+  if (!refund)
+    throw new RefundFlowError("Only failed refunds can be retried.", 409);
+  const booking = await Booking.findOneAndUpdate(
+    { _id: refund.booking, status: "CONFIRMED" },
+    { $set: { status: "REFUND_PENDING" } },
+    { returnDocument: "after" },
+  ).lean();
+  if (!booking) {
+    await Refund.updateOne({ _id: refund._id }, { $set: { status: "FAILED" } });
+    throw new RefundFlowError(
+      "Booking status changed during refund retry.",
+      409,
+    );
+  }
+  return approveRefund(
+    adminId,
+    refundId,
+    approvedAmount ?? refund.approvedAmount ?? refund.requestedAmount,
+    undefined,
+    adminNote,
+  );
 }

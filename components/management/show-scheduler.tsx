@@ -155,6 +155,8 @@ export function ShowScheduler({ role }: { role: Role }) {
           screen: screenId,
           startTime: form.get("startTime"),
           endTime: form.get("endTime"),
+          bookingOpensAt: form.get("bookingOpensAt") || undefined,
+          bookingClosesAt: form.get("bookingClosesAt") || undefined,
           pricing,
           bookingLimits: {
             maxSeatsPerBooking: Number(form.get("maxSeatsPerBooking")),
@@ -309,6 +311,18 @@ export function ShowScheduler({ role }: { role: Role }) {
                     name="endTime"
                     type="datetime-local"
                     required
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <Input
+                    label="Booking opens"
+                    name="bookingOpensAt"
+                    type="datetime-local"
+                  />
+                  <Input
+                    label="Booking closes"
+                    name="bookingClosesAt"
+                    type="datetime-local"
                   />
                 </div>
                 <div>

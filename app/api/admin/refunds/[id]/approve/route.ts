@@ -14,8 +14,15 @@ export async function POST(
     const { id } = await params;
     const body = (await request.json().catch(() => ({}))) as {
       approvedAmount?: number;
+      note?: string;
     };
-    const result = await approveRefund(admin.id, id, body.approvedAmount);
+    const result = await approveRefund(
+      admin.id,
+      id,
+      body.approvedAmount,
+      undefined,
+      body.note,
+    );
     return NextResponse.json(result);
   } catch (error) {
     if (error instanceof RefundFlowError)

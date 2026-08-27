@@ -26,13 +26,19 @@ export async function validateCouponForBooking({
   code,
   userId,
   eventId,
+  movieId,
   categoryId,
+  organizerId,
+  cityId,
   seats,
 }: {
   code: string;
   userId: string;
   eventId?: string;
+  movieId?: string;
   categoryId?: string;
+  organizerId?: string;
+  cityId?: string;
   seats: PricedSeat[];
 }): Promise<{ coupon: AppliedCoupon; pricing: PricingBreakdown }> {
   const normalizedCode = code.trim().toUpperCase();
@@ -58,21 +64,46 @@ export async function validateCouponForBooking({
     );
   }
 
-  const applicableEvents = coupon.applicableEvents.map((id) => id.toString());
-  const applicableCategories = coupon.applicableCategories.map((id) =>
-    id.toString(),
-  );
-  const restricted =
-    applicableEvents.length > 0 || applicableCategories.length > 0;
-  const appliesToEvent = Boolean(eventId && applicableEvents.includes(eventId));
-  const appliesToCategory = Boolean(
-    categoryId && applicableCategories.includes(categoryId),
-  );
-  if (restricted && !appliesToEvent && !appliesToCategory) {
+  const targetMatches = (
+    targets: Array<{ toString(): string }> | undefined,
+    value: string | undefined,
+  ) =>
+    !targets?.length ||
+    Boolean(value && targets.some((id) => id.toString() === value));
+  const hasContentTargets =
+    coupon.applicableEvents.length > 0 || coupon.applicableMovies.length > 0;
+  const matchesContentTarget =
+    !hasContentTargets ||
+    Boolean(
+      eventId &&
+      coupon.applicableEvents.some((id) => id.toString() === eventId),
+    ) ||
+    Boolean(
+      movieId &&
+      coupon.applicableMovies.some((id) => id.toString() === movieId),
+    );
+  if (
+    !matchesContentTarget ||
+    !targetMatches(coupon.applicableCategories, categoryId) ||
+    !targetMatches(coupon.applicableOrganizers, organizerId) ||
+    !targetMatches(coupon.applicableCities, cityId)
+  ) {
     throw new CouponValidationError(
       "This coupon is not eligible for the selected show.",
       400,
     );
+  }
+
+  if (coupon.newUserOnly) {
+    const hasPreviousBooking = await Booking.exists({
+      user: userId,
+      status: { $in: ["CONFIRMED", "REFUND_PENDING", "REFUNDED"] },
+    });
+    if (hasPreviousBooking)
+      throw new CouponValidationError(
+        "This coupon is available only for new customers.",
+        400,
+      );
   }
 
   const activePendingQuery = {

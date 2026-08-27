@@ -27,7 +27,7 @@ function MixedCards({ items }: { items: ContentCard[] }) {
     <>
       {items.map((item) =>
         item.category === "Movie" ? (
-          <MovieCard key={item.id} movie={item} />
+          <MovieCard key={item.id} movie={item} variant="landscape" />
         ) : (
           <EventCard key={item.id} event={item} />
         ),

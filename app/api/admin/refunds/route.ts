@@ -11,8 +11,29 @@ export async function GET(request: NextRequest) {
     await requireManagementUser(request, ["ADMIN"]);
     await connectToDatabase();
     const refunds = await Refund.find()
-      .populate({ path: "booking", select: "status pricing seats user" })
-      .populate({ path: "payment", select: "gatewayPaymentId status" })
+      .populate({
+        path: "booking",
+        select: "status pricing seats user show",
+        populate: [
+          { path: "user", select: "name email phone" },
+          {
+            path: "show",
+            select: "startTime movie event venue cinema",
+            populate: [
+              { path: "movie", select: "title" },
+              { path: "event", select: "title" },
+              { path: "venue", select: "name" },
+              { path: "cinema", select: "name" },
+            ],
+          },
+        ],
+      })
+      .populate({
+        path: "payment",
+        select:
+          "gatewayPaymentId gatewayOrderId paymentMethod status amount currency createdAt paidAt",
+      })
+      .populate({ path: "adminApprover", select: "name email" })
       .sort({ createdAt: -1 })
       .limit(100)
       .lean();

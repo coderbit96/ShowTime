@@ -55,6 +55,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     if (actor.role !== "ADMIN")
       throw new Error("Only an admin can archive a venue.");
     venue.active = false;
+    venue.operationalStatus = "INACTIVE";
     await venue.save();
     await writeAuditLog({
       request,
@@ -64,7 +65,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       resourceType: "Venue",
       resourceId: venue._id.toString(),
       before: { active: true },
-      after: { active: false },
+      after: { active: false, operationalStatus: "INACTIVE" },
     });
     return NextResponse.json({ ok: true });
   } catch (error) {

@@ -19,6 +19,7 @@ import { firebaseAuth } from "@/lib/firebase/client";
 
 type ManagementRole = "ADMIN" | "ORGANIZER";
 type City = { _id?: string; id?: string; name: string; state: string };
+type Organizer = { _id: string; organizationName: string };
 type Venue = {
   _id: string;
   name: string;
@@ -26,6 +27,7 @@ type Venue = {
   capacity: number;
   venueType: string;
   approvalStatus: string;
+  operationalStatus?: "ACTIVE" | "INACTIVE" | "MAINTENANCE";
   city?: { name: string; state: string };
 };
 type Cinema = {
@@ -69,6 +71,7 @@ const venueTypes = [
 export function SpaceManager({ role }: { role: ManagementRole }) {
   const [tab, setTab] = useState<Tab>("venues");
   const [cities, setCities] = useState<City[]>([]);
+  const [organizers, setOrganizers] = useState<Organizer[]>([]);
   const [venues, setVenues] = useState<Venue[]>([]);
   const [cinemas, setCinemas] = useState<Cinema[]>([]);
   const [screens, setScreens] = useState<Screen[]>([]);
@@ -108,16 +111,21 @@ export function SpaceManager({ role }: { role: ManagementRole }) {
     setLoading(true);
     setError("");
     try {
-      const [cityData, venueData, cinemaData, screenData] = await Promise.all([
-        request("/api/management/cities"),
-        request("/api/management/venues"),
-        request("/api/management/cinemas"),
-        request("/api/management/screens"),
-      ]);
+      const [cityData, venueData, cinemaData, screenData, organizerData] =
+        await Promise.all([
+          request("/api/management/cities"),
+          request("/api/management/venues"),
+          request("/api/management/cinemas"),
+          request("/api/management/screens"),
+          role === "ADMIN"
+            ? request("/api/management/organizers")
+            : Promise.resolve({ organizers: [] }),
+        ]);
       setCities(cityData.cities ?? []);
       setVenues(venueData.venues ?? []);
       setCinemas(cinemaData.cinemas ?? []);
       setScreens(screenData.screens ?? []);
+      setOrganizers(organizerData.organizers ?? []);
     } catch (loadError) {
       setError(
         loadError instanceof Error
@@ -127,7 +135,7 @@ export function SpaceManager({ role }: { role: ManagementRole }) {
     } finally {
       setLoading(false);
     }
-  }, [request]);
+  }, [request, role]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -166,6 +174,9 @@ export function SpaceManager({ role }: { role: ManagementRole }) {
           city: form.get("city"),
           capacity: Number(form.get("capacity")),
           venueType: form.get("venueType"),
+          parkingAvailable: form.get("parkingAvailable") === "on",
+          seatingType: form.get("seatingType"),
+          assignedOrganizer: form.get("assignedOrganizer") || undefined,
           amenities: String(form.get("amenities") ?? "")
             .split(",")
             .map((entry) => entry.trim())
@@ -287,6 +298,30 @@ export function SpaceManager({ role }: { role: ManagementRole }) {
     }
   };
 
+  const updateVenueStatus = async (
+    id: string,
+    operationalStatus: "ACTIVE" | "INACTIVE" | "MAINTENANCE",
+  ) => {
+    try {
+      await request(`/api/management/venues/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          operationalStatus,
+          active: operationalStatus === "ACTIVE",
+        }),
+      });
+      setNotice("Venue status updated.");
+      await load();
+    } catch (updateError) {
+      setError(
+        updateError instanceof Error
+          ? updateError.message
+          : "Unable to update venue status.",
+      );
+    }
+  };
+
   return (
     <main className="min-h-screen bg-background px-5 py-8 text-foreground sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
@@ -366,6 +401,31 @@ export function SpaceManager({ role }: { role: ManagementRole }) {
                   }))}
                   required
                 />
+                <SelectField
+                  label="Seating type"
+                  name="seatingType"
+                  options={[
+                    { id: "FIXED", label: "Fixed seating" },
+                    { id: "FLEXIBLE", label: "Flexible seating" },
+                    { id: "STANDING", label: "Standing" },
+                    { id: "MIXED", label: "Mixed" },
+                  ]}
+                  required
+                />
+                <label className="flex items-center gap-2 rounded-sm border border-border bg-background px-3 py-2 text-sm text-muted">
+                  <input name="parkingAvailable" type="checkbox" />
+                  Parking available
+                </label>
+                {role === "ADMIN" ? (
+                  <SelectField
+                    label="Assigned organizer"
+                    name="assignedOrganizer"
+                    options={organizers.map((organizer) => ({
+                      id: organizer._id,
+                      label: organizer.organizationName,
+                    }))}
+                  />
+                ) : null}
                 <Field
                   label="Amenities"
                   name="amenities"
@@ -402,8 +462,17 @@ export function SpaceManager({ role }: { role: ManagementRole }) {
                 id: venue._id,
                 title: venue.name,
                 detail: `${venue.city?.name ?? "Unknown city"} - ${venue.capacity} seats - ${venue.venueType.replaceAll("_", " ")}`,
-                status: venue.approvalStatus,
+                status: `${venue.approvalStatus} · ${venue.operationalStatus ?? "ACTIVE"}`,
               }))}
+              onStatusChange={
+                role === "ADMIN"
+                  ? (id, status) =>
+                      void updateVenueStatus(
+                        id,
+                        status as "ACTIVE" | "INACTIVE" | "MAINTENANCE",
+                      )
+                  : undefined
+              }
               onArchive={
                 role === "ADMIN" ? (id) => archive("venues", id) : undefined
               }
@@ -710,11 +779,13 @@ function SpaceList({
   empty,
   items,
   onArchive,
+  onStatusChange,
 }: {
   title: string;
   empty: string;
   items: Array<{ id: string; title: string; detail: string; status?: string }>;
   onArchive?: (id: string) => void;
+  onStatusChange?: (id: string, status: string) => void;
 }) {
   return (
     <section>
@@ -747,6 +818,20 @@ function SpaceList({
                 >
                   <Trash2 className="size-4" aria-hidden="true" />
                 </button>
+              ) : null}
+              {onStatusChange ? (
+                <select
+                  value={item.status?.split(" · ")[1] ?? "ACTIVE"}
+                  onChange={(event) =>
+                    onStatusChange(item.id, event.target.value)
+                  }
+                  className="h-9 rounded-sm border border-border bg-background px-2 text-xs"
+                  aria-label={`Set ${item.title} status`}
+                >
+                  <option value="ACTIVE">Active</option>
+                  <option value="INACTIVE">Inactive</option>
+                  <option value="MAINTENANCE">Maintenance</option>
+                </select>
               ) : null}
             </article>
           ))

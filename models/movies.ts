@@ -26,6 +26,19 @@ const MovieSchema = new Schema(
     certificate: { type: String, required: true, trim: true, index: true },
     releaseDate: { type: Date, required: true, index: true },
     rating: { type: Number, default: 0, min: 0, max: 10, index: true },
+    formats: {
+      type: [String],
+      enum: ["2D", "3D", "IMAX", "4DX"],
+      default: ["2D"],
+    },
+    availabilityStatus: {
+      type: String,
+      enum: ["NOW_SHOWING", "COMING_SOON"],
+      default: "COMING_SOON",
+      index: true,
+    },
+    trending: { type: Boolean, default: false, index: true },
+    featured: { type: Boolean, default: false, index: true },
     active: { type: Boolean, default: true, index: true },
   },
   { timestamps: true },
@@ -42,6 +55,12 @@ MovieSchema.index(
 );
 MovieSchema.index({ slug: 1 }, { unique: true });
 MovieSchema.index({ releaseDate: -1, active: 1 });
+MovieSchema.index({
+  availabilityStatus: 1,
+  featured: 1,
+  trending: 1,
+  active: 1,
+});
 
 export interface IMovie extends InferSchemaType<typeof MovieSchema> {}
 

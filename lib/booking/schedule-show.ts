@@ -3,6 +3,7 @@ import { z } from "zod";
 import { connectToDatabase } from "@/lib/mongodb/connect";
 import {
   Cinema,
+  City,
   Event,
   Movie,
   Screen,
@@ -27,6 +28,8 @@ export const createShowSchema = z
     screen: objectId,
     startTime: z.coerce.date(),
     endTime: z.coerce.date(),
+    bookingOpensAt: z.coerce.date().optional(),
+    bookingClosesAt: z.coerce.date().optional(),
     pricing: z
       .array(
         z.object({
@@ -48,6 +51,16 @@ export const createShowSchema = z
         code: "custom",
         message: "End time must be after start time.",
         path: ["endTime"],
+      });
+    if (
+      value.bookingOpensAt &&
+      value.bookingClosesAt &&
+      value.bookingClosesAt <= value.bookingOpensAt
+    )
+      context.addIssue({
+        code: "custom",
+        message: "Booking closing time must be after opening time.",
+        path: ["bookingClosesAt"],
       });
     if (value.contentType === "MOVIE" && (!value.movie || value.event))
       context.addIssue({
@@ -153,6 +166,7 @@ export async function createScheduledShow(
           Venue.findOne({
             _id: input.venue,
             active: true,
+            operationalStatus: "ACTIVE",
             approvalStatus: "APPROVED",
           })
             .session(session)
@@ -220,6 +234,11 @@ export async function createScheduledShow(
                 .lean()
             )?.city;
       if (!city) throw new Error("The selected location does not have a city.");
+      const activeCity = await City.exists({ _id: city, active: true }).session(
+        session,
+      );
+      if (!activeCity)
+        throw new Error("The selected city is inactive for customer bookings.");
 
       const seatAvailability = seatLayout.rows.flatMap((row) =>
         row.seats.map((seat) => ({
@@ -241,6 +260,8 @@ export async function createScheduledShow(
         date: startOfDay(input.startTime),
         startTime: input.startTime,
         endTime: input.endTime,
+        bookingOpensAt: input.bookingOpensAt,
+        bookingClosesAt: input.bookingClosesAt,
         pricing: input.pricing,
         bookingLimits: input.bookingLimits,
         seatAvailability,

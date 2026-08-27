@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged, type User } from "firebase/auth";
-import { ChevronDown, Menu, Search, Ticket, UserRound, X } from "lucide-react";
+import { Menu, Search, Ticket, UserRound, X } from "lucide-react";
 import { GlobalSearch } from "@/components/search";
 import { firebaseAuth } from "@/lib/firebase/client";
 import { CitySelector } from "./city-selector";
@@ -21,11 +21,7 @@ const navLinks = [
 
 export function SiteHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [accountOpen, setAccountOpen] = useState(false);
   const [authUser, setAuthUser] = useState<User | null>(null);
-  const accountHref = authUser
-    ? "/account"
-    : `/auth/login?returnTo=${encodeURIComponent("/account")}`;
 
   useEffect(() => {
     return onAuthStateChanged(firebaseAuth, (user) => setAuthUser(user));
@@ -67,44 +63,13 @@ export function SiteHeader() {
         <div className="hidden items-center gap-2 md:flex">
           <CitySelector />
           <NotificationMenu />
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setAccountOpen((current) => !current)}
-              className="premium-button h-10 gap-2 px-3 text-sm font-semibold"
-              aria-expanded={accountOpen}
-            >
-              <UserRound className="size-4" aria-hidden="true" />
-              <span>Account</span>
-              <ChevronDown className="size-4" aria-hidden="true" />
-            </button>
-
-            {accountOpen ? (
-              <div className="premium-panel absolute right-0 top-12 z-40 w-56 rounded-md p-2">
-                <Link
-                  href={accountHref}
-                  onClick={() => setAccountOpen(false)}
-                  className="block rounded-md px-3 py-2.5 text-sm font-medium hover:bg-white/[0.07] hover:text-secondary"
-                >
-                  My account
-                </Link>
-                <Link
-                  href="/auth/login"
-                  onClick={() => setAccountOpen(false)}
-                  className="block rounded-md px-3 py-2.5 text-sm font-medium hover:bg-white/[0.07] hover:text-secondary"
-                >
-                  Login
-                </Link>
-                <Link
-                  href="/auth/register"
-                  onClick={() => setAccountOpen(false)}
-                  className="block rounded-md px-3 py-2.5 text-sm font-medium hover:bg-white/[0.07] hover:text-secondary"
-                >
-                  Create account
-                </Link>
-              </div>
-            ) : null}
-          </div>
+          <Link
+            href="/account"
+            className="premium-button h-10 gap-2 px-3 text-sm font-semibold"
+          >
+            <UserRound className="size-4" aria-hidden="true" />
+            <span>{authUser ? "My account" : "Account"}</span>
+          </Link>
         </div>
 
         <button
@@ -150,23 +115,34 @@ export function SiteHeader() {
               ))}
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
+            {authUser ? (
               <Link
-                href="/auth/login"
+                href="/account"
                 className="premium-button h-10 gap-2 px-3 text-sm font-semibold"
                 onClick={() => setMobileOpen(false)}
               >
-                <Ticket className="size-4" aria-hidden="true" />
-                Login
+                <UserRound className="size-4" aria-hidden="true" />
+                My account
               </Link>
-              <Link
-                href="/auth/register"
-                className="premium-button-secondary h-10 px-3 text-sm font-semibold"
-                onClick={() => setMobileOpen(false)}
-              >
-                Register
-              </Link>
-            </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                <Link
+                  href="/auth/login?returnTo=%2Faccount"
+                  className="premium-button h-10 gap-2 px-3 text-sm font-semibold"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <Ticket className="size-4" aria-hidden="true" />
+                  Login
+                </Link>
+                <Link
+                  href="/auth/register?returnTo=%2Faccount"
+                  className="premium-button-secondary h-10 px-3 text-sm font-semibold"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Register
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       ) : null}

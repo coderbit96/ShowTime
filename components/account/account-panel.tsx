@@ -12,6 +12,11 @@ import {
   XCircle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import {
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updatePassword,
+} from "firebase/auth";
 import { firebaseAuth } from "@/lib/firebase/client";
 
 type Profile = { name: string; email: string; phone?: string; avatar?: string };
@@ -101,6 +106,7 @@ export function AccountPanel() {
   const [passes, setPasses] = useState<WalletPass[]>([]);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [changingPassword, setChangingPassword] = useState(false);
   const [reviewDrafts, setReviewDrafts] = useState<
     Record<string, { rating: string; comment: string }>
   >({});
@@ -164,6 +170,55 @@ export function AccountPanel() {
       setMessage(
         error instanceof Error ? error.message : "Unable to update profile.",
       );
+    }
+  };
+
+  const changePassword = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const currentPassword = String(form.get("currentPassword") ?? "");
+    const newPassword = String(form.get("newPassword") ?? "");
+    const confirmPassword = String(form.get("confirmPassword") ?? "");
+
+    if (newPassword.length < 6) {
+      setMessage("Your new password must be at least 6 characters.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setMessage("Your new passwords do not match.");
+      return;
+    }
+
+    const user = firebaseAuth.currentUser;
+    const hasPasswordLogin = user?.providerData.some(
+      (provider) => provider.providerId === "password",
+    );
+    if (!user?.email || !hasPasswordLogin) {
+      setMessage(
+        "This account uses Google sign-in, so its password is managed by Google.",
+      );
+      return;
+    }
+
+    setChangingPassword(true);
+    setMessage("");
+    try {
+      const credential = EmailAuthProvider.credential(
+        user.email,
+        currentPassword,
+      );
+      await reauthenticateWithCredential(user, credential);
+      await updatePassword(user, newPassword);
+      event.currentTarget.reset();
+      setMessage("Your password has been changed successfully.");
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Unable to change your password. Please try again.",
+      );
+    } finally {
+      setChangingPassword(false);
     }
   };
 
@@ -368,6 +423,55 @@ export function AccountPanel() {
             </label>
             <button className="h-10 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground sm:w-fit">
               Save profile
+            </button>
+          </form>
+        </section>
+        <section>
+          <h2 className="text-lg font-semibold">Password & security</h2>
+          <p className="mt-1 text-sm text-muted">
+            Confirm your current password before choosing a new one.
+          </p>
+          <form
+            onSubmit={changePassword}
+            className="mt-4 grid gap-3 rounded-md border border-border bg-surface p-4 sm:grid-cols-2"
+          >
+            <label className="grid gap-1 text-sm sm:col-span-2">
+              Current password
+              <input
+                name="currentPassword"
+                required
+                type="password"
+                autoComplete="current-password"
+                className="h-10 rounded-md border border-border bg-background px-3"
+              />
+            </label>
+            <label className="grid gap-1 text-sm">
+              New password
+              <input
+                name="newPassword"
+                required
+                type="password"
+                minLength={6}
+                autoComplete="new-password"
+                className="h-10 rounded-md border border-border bg-background px-3"
+              />
+            </label>
+            <label className="grid gap-1 text-sm">
+              Confirm new password
+              <input
+                name="confirmPassword"
+                required
+                type="password"
+                minLength={6}
+                autoComplete="new-password"
+                className="h-10 rounded-md border border-border bg-background px-3"
+              />
+            </label>
+            <button
+              disabled={changingPassword}
+              className="premium-button h-10 px-4 text-sm font-semibold sm:w-fit disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {changingPassword ? "Changing password..." : "Change password"}
             </button>
           </form>
         </section>

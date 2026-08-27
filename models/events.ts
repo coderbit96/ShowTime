@@ -15,6 +15,7 @@ const EventSchema = new Schema(
     title: { type: String, required: true, trim: true },
     slug: { type: String, required: true, trim: true, lowercase: true },
     description: { type: String, required: true, trim: true },
+    termsAndConditions: { type: String, trim: true, maxlength: 8000 },
     poster: { type: String, required: true, trim: true },
     banner: { type: String, trim: true },
     gallery: { type: [String], default: [] },
@@ -73,16 +74,37 @@ const EventSchema = new Schema(
     rating: { type: Number, min: 0, max: 5 },
     status: {
       type: String,
-      enum: ["DRAFT", "PUBLISHED", "CANCELLED", "COMPLETED"],
+      enum: [
+        "DRAFT",
+        "SUBMITTED",
+        "UNDER_REVIEW",
+        "PUBLISHED",
+        "CANCELLED",
+        "COMPLETED",
+        "ARCHIVED",
+      ],
       default: "DRAFT",
       index: true,
     },
     approvalStatus: {
       type: String,
-      enum: ["PENDING", "APPROVED", "REJECTED"],
+      enum: [
+        "PENDING",
+        "UNDER_REVIEW",
+        "APPROVED",
+        "REJECTED",
+        "CHANGES_REQUESTED",
+      ],
       default: "PENDING",
       index: true,
     },
+    moderationNote: { type: String, trim: true, maxlength: 2000 },
+    rejectionReason: { type: String, trim: true, maxlength: 2000 },
+    scheduledPublishAt: { type: Date, index: true },
+    featured: { type: Boolean, default: false, index: true },
+    trending: { type: Boolean, default: false, index: true },
+    recommended: { type: Boolean, default: false, index: true },
+    archivedAt: { type: Date },
     active: { type: Boolean, default: true, index: true },
   },
   { timestamps: true },
@@ -92,6 +114,7 @@ EventSchema.index({ slug: 1 }, { unique: true });
 EventSchema.index({ city: 1, category: 1, startsAt: 1, status: 1 });
 EventSchema.index({ organizer: 1, status: 1, startsAt: -1 });
 EventSchema.index({ approvalStatus: 1, status: 1, startsAt: -1 });
+EventSchema.index({ featured: 1, trending: 1, recommended: 1, active: 1 });
 EventSchema.index({ title: "text", description: "text" });
 
 export interface IEvent extends InferSchemaType<typeof EventSchema> {}

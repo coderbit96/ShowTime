@@ -11,6 +11,10 @@ const schema = z.object({
   status: z.enum(["VERIFIED", "REJECTED", "SUSPENDED"]),
   canCreateVenues: z.boolean().optional(),
   payoutEnabled: z.boolean().optional(),
+  kycStatus: z
+    .enum(["NOT_SUBMITTED", "PENDING", "VERIFIED", "REJECTED"])
+    .optional(),
+  commissionRatePercent: z.number().min(0).max(100).optional(),
 });
 export async function PATCH(
   request: NextRequest,
@@ -37,6 +41,12 @@ export async function PATCH(
           ...(input.payoutEnabled === undefined
             ? {}
             : { payoutEnabled: input.payoutEnabled }),
+          ...(input.kycStatus === undefined
+            ? {}
+            : { kycStatus: input.kycStatus }),
+          ...(input.commissionRatePercent === undefined
+            ? {}
+            : { commissionRatePercent: input.commissionRatePercent }),
         },
       },
       { returnDocument: "after" },

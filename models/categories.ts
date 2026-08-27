@@ -7,6 +7,8 @@ const CategorySchema = new Schema(
     slug: { type: String, required: true, trim: true, lowercase: true },
     description: { type: String, trim: true },
     icon: { type: String, trim: true },
+    image: { type: String, trim: true },
+    parent: { type: Schema.Types.ObjectId, ref: "Category", index: true },
     active: { type: Boolean, default: true, index: true },
     sortOrder: { type: Number, default: 0 },
   },
@@ -15,6 +17,7 @@ const CategorySchema = new Schema(
 
 CategorySchema.index({ slug: 1 }, { unique: true });
 CategorySchema.index({ active: 1, sortOrder: 1 });
+CategorySchema.index({ parent: 1, active: 1, sortOrder: 1 });
 
 export interface ICategory extends InferSchemaType<typeof CategorySchema> {}
 

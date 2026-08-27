@@ -22,6 +22,15 @@ const UserSchema = new Schema(
       default: [],
     },
     active: { type: Boolean, default: true, index: true },
+    accountStatus: {
+      type: String,
+      enum: ["ACTIVE", "INACTIVE", "BLOCKED"],
+      default: "ACTIVE",
+      index: true,
+    },
+    blockedAt: { type: Date },
+    blockReason: { type: String, trim: true, maxlength: 500 },
+    accessResetAt: { type: Date },
     lastLoginAt: { type: Date },
   },
   { timestamps: true },
@@ -30,6 +39,7 @@ const UserSchema = new Schema(
 UserSchema.index({ firebaseUid: 1 }, { unique: true });
 UserSchema.index({ email: 1 }, { unique: true });
 UserSchema.index({ role: 1, active: 1 });
+UserSchema.index({ role: 1, accountStatus: 1, createdAt: -1 });
 
 export interface IUser extends InferSchemaType<typeof UserSchema> {}
 

@@ -7,10 +7,14 @@ import { writeAuditLog } from "@/lib/audit/write-audit-log";
 import { slugify } from "@/lib/management/schemas";
 import { Category } from "@/models";
 
+const objectId = /^[a-f\d]{24}$/i;
+
 export async function GET(request: NextRequest) {
   try {
-    await requireManagementUser(request);
-    const categories = await Category.find({ active: true })
+    const actor = await requireManagementUser(request);
+    const categories = await Category.find(
+      actor.role === "ADMIN" ? {} : { active: true },
+    )
       .sort({ sortOrder: 1, name: 1 })
       .lean();
     return NextResponse.json({ categories });
@@ -25,6 +29,11 @@ export async function POST(request: NextRequest) {
     const body = (await request.json()) as {
       name?: string;
       description?: string;
+      icon?: string;
+      image?: string;
+      parent?: string;
+      sortOrder?: number;
+      active?: boolean;
     };
     if (!body.name?.trim())
       return NextResponse.json(
@@ -35,6 +44,13 @@ export async function POST(request: NextRequest) {
       name: body.name.trim(),
       slug: slugify(body.name),
       description: body.description?.trim(),
+      icon: body.icon?.trim(),
+      image: body.image?.trim(),
+      ...(body.parent && objectId.test(body.parent)
+        ? { parent: body.parent }
+        : {}),
+      sortOrder: Number.isFinite(body.sortOrder) ? body.sortOrder : 0,
+      active: body.active ?? true,
     });
     await writeAuditLog({
       request,
