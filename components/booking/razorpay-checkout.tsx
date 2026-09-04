@@ -147,7 +147,7 @@ export function RazorpayCheckout({
         type="button"
         onClick={() => void startCheckout()}
         disabled={loading}
-        className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-accent px-4 text-sm font-semibold text-accent-foreground transition-colors hover:bg-warning disabled:cursor-not-allowed disabled:opacity-45"
+        className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-cta px-4 text-sm font-semibold text-cta-foreground transition-colors hover:bg-cta-hover disabled:cursor-not-allowed disabled:opacity-45"
       >
         {loading ? (
           <LoaderCircle className="size-4 animate-spin" />

@@ -1,11 +1,13 @@
-import type { Metadata } from "next";
 import { AuthRequired } from "@/components/auth/auth-required";
 import { BookingSummary } from "@/components/booking/booking-summary";
+import { pageMetadata } from "@/lib/seo/site";
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: "Booking summary | Show Time",
   description: "Review your selected seats before payment.",
-};
+  path: "/booking/summary",
+  index: false,
+});
 
 export default async function BookingSummaryPage({
   searchParams,

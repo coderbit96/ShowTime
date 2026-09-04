@@ -11,22 +11,25 @@ const geistSans = Geist({
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "Show Time",
-  description: "Modern entertainment and ticket booking platform.",
+  title: "Show Time | Kolkata movies and events",
+  description:
+    "Discover and securely book movies, events, and experiences across Kolkata.",
   alternates: {
     canonical: absoluteUrl("/"),
   },
   openGraph: {
-    title: "Show Time",
-    description: "Modern entertainment and ticket booking platform.",
+    title: "Show Time | Kolkata movies and events",
+    description:
+      "Discover and securely book movies, events, and experiences across Kolkata.",
     url: absoluteUrl("/"),
     siteName: "Show Time",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Show Time",
-    description: "Modern entertainment and ticket booking platform.",
+    title: "Show Time | Kolkata movies and events",
+    description:
+      "Discover and securely book movies, events, and experiences across Kolkata.",
   },
   icons: {
     icon: "/icon.svg",

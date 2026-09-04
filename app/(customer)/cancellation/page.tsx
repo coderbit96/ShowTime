@@ -1,10 +1,11 @@
-import type { Metadata } from "next";
 import { InfoPage } from "@/components/site/info-page";
+import { pageMetadata } from "@/lib/seo/site";
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: "Cancellation Policy | Show Time",
   description: "Cancellation and refund policy for Show Time bookings.",
-};
+  path: "/cancellation",
+});
 
 export default function CancellationPage() {
   return (

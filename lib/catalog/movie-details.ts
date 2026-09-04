@@ -1,5 +1,6 @@
 import { connectToDatabase } from "@/lib/mongodb/connect";
 import { Movie, Show } from "@/models";
+import { kolkataCinemas } from "./kolkata-cinemas";
 import { mockCatalog } from "./mock-catalog";
 import type { ContentCard, MovieDetail, MovieShowtime } from "./types";
 
@@ -96,6 +97,11 @@ function formatDuration(minutes: number) {
   return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
 }
 
+function durationToMinutes(duration: string) {
+  const match = /(?:(\d+)h)?\s*(?:(\d+)m)?/i.exec(duration);
+  return Number(match?.[1] ?? 0) * 60 + Number(match?.[2] ?? 0);
+}
+
 function formatDate(date: Date) {
   return new Intl.DateTimeFormat("en-IN", {
     day: "numeric",
@@ -116,24 +122,25 @@ function toDateKey(date: Date) {
 }
 
 function mockShowtimes(item: ContentCard): MovieShowtime[] {
-  const city = item.city;
+  const city = "Kolkata";
   const primaryCinema = item.venue;
   const alternativeCinema =
     item.slug === "the-last-forest"
-      ? "Cinepolis: Seawoods"
-      : "PVR: Jio World Drive";
+      ? "PVR: Mani Square Mall"
+      : "Cinepolis: Acropolis Mall";
   const basePrice = item.priceFrom;
-  const days = ["2026-08-24", "2026-08-25", "2026-08-26"];
+  const days = ["2026-09-04", "2026-09-05", "2026-09-06"];
   const timeSlots = ["4:15 pm", "7:10 pm", "10:05 pm"];
 
   return days.flatMap((date, dayIndex) =>
     timeSlots.map((time, timeIndex) => ({
       id: `show-${item.id}-${date}-${timeIndex}`,
-      city: dayIndex === 2 && timeIndex === 2 ? "Delhi" : city,
+      city,
       cinema: dayIndex === 1 ? alternativeCinema : primaryCinema,
       cinemaAddress:
         dayIndex === 1
-          ? "Seawoods Grand Central, Navi Mumbai"
+          ? (kolkataCinemas.find((cinema) => cinema.name === alternativeCinema)
+              ?.address ?? "Kolkata")
           : `${primaryCinema}, ${city}`,
       screen: timeIndex === 1 ? "Screen 3" : "Screen 1",
       date,
@@ -165,10 +172,13 @@ function mockMovieDetail(item: ContentCard): MovieDetail {
     ],
     trailer: credits?.trailer,
     duration: item.duration ?? "2h 00m",
+    durationMinutes: durationToMinutes(item.duration ?? "2h 00m"),
     certificate: credits?.certificate ?? "UA 13+",
     releaseDate: credits?.releaseDate ?? "Coming soon",
+    releaseDateISO: item.startsAt ?? "2026-09-01T00:00:00+05:30",
     rating: item.rating ?? 0,
     showtimes: mockShowtimes(item),
+    cinemaChoices: kolkataCinemas,
   };
 }
 
@@ -231,14 +241,17 @@ export async function getMovieDetail(
         })),
         trailer: movie.trailer,
         duration: formatDuration(movie.duration),
+        durationMinutes: movie.duration,
         certificate: movie.certificate,
         releaseDate: new Intl.DateTimeFormat("en-IN", {
           day: "numeric",
           month: "long",
           year: "numeric",
         }).format(movie.releaseDate),
+        releaseDateISO: movie.releaseDate.toISOString(),
         rating: movie.rating,
         showtimes: shows.map(formatDatabaseShow),
+        cinemaChoices: kolkataCinemas,
       };
     }
   } catch {

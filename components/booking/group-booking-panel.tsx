@@ -135,7 +135,7 @@ export function GroupBookingPanel() {
             <button
               type="submit"
               disabled={creating}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-accent px-4 text-sm font-semibold text-accent-foreground disabled:opacity-50"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-cta px-4 text-sm font-semibold text-cta-foreground disabled:opacity-50"
             >
               {creating ? (
                 <LoaderCircle className="size-4 animate-spin" />

@@ -34,7 +34,10 @@ export type EventDetail = {
   rating?: number;
   dateLabel: string;
   timeLabel: string;
+  startDate: string;
+  endDate?: string;
   duration: string;
+  durationMinutes: number;
   language: string[];
   ageRestriction: string;
   artists: Array<{ name: string; role: string; image?: string }>;
@@ -65,6 +68,12 @@ export type MovieShowtime = {
   availability: "AVAILABLE" | "SOLD_OUT";
 };
 
+export type CinemaChoice = {
+  name: string;
+  locality: string;
+  address: string;
+};
+
 export type MovieDetail = {
   id: string;
   slug: string;
@@ -78,10 +87,13 @@ export type MovieDetail = {
   crew: Array<{ name: string; role: string; image?: string }>;
   trailer?: string;
   duration: string;
+  durationMinutes: number;
   certificate: string;
   releaseDate: string;
+  releaseDateISO: string;
   rating: number;
   showtimes: MovieShowtime[];
+  cinemaChoices: CinemaChoice[];
 };
 
 export type VenueCard = {

@@ -15,10 +15,11 @@
     "test:stage-f": "tsx scripts/test-stage-f-suite.ts",
     "test:launch-suite": "npm run test:booking-flow && npm run test:stage-f",
     "seed:demo-roles": "tsx scripts/seed-demo-roles.ts",
+    "seed:demo-catalog": "tsx scripts/seed-demo-catalog.ts",
+    "db:migrate:screen-owner-indexes": "tsx scripts/migrate-screen-owner-indexes.ts",
     "db:migrate:movie-text-index": "tsx scripts/migrate-movie-text-index.ts"
   },
   "dependencies": {
-    "@hookform/resolvers": "^5.9.1",
     "@zxing/browser": "^0.2.1",
     "cloudinary": "^2.10.1",
     "firebase": "^12.17.1",
@@ -32,7 +33,6 @@
     "razorpay": "^2.9.8",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "react-hook-form": "^7.85.0",
     "zod": "^4.4.3",
     "zustand": "^5.0.15"
   },

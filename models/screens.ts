@@ -41,8 +41,20 @@ const ScreenSchema = new Schema(
   { timestamps: true },
 );
 
-ScreenSchema.index({ cinema: 1, name: 1 }, { unique: true, sparse: true });
-ScreenSchema.index({ venue: 1, name: 1 }, { unique: true, sparse: true });
+ScreenSchema.index(
+  { cinema: 1, name: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { cinema: { $exists: true, $type: "objectId" } },
+  },
+);
+ScreenSchema.index(
+  { venue: 1, name: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { venue: { $exists: true, $type: "objectId" } },
+  },
+);
 ScreenSchema.index({ cinema: 1, active: 1 });
 ScreenSchema.index({ venue: 1, active: 1 });
 

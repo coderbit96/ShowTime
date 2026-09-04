@@ -40,19 +40,19 @@ type DatabaseShow = {
 
 const eventDescriptions: Record<string, string> = {
   "midnight-grove-live":
-    "An open-air night of live music, luminous stage design, and the kind of crowd that remembers every chorus. Midnight Grove brings its full live set to Bandra for one unhurried evening under the lights.",
+    "An open-air night of live music, luminous stage design, and the kind of crowd that remembers every chorus. Midnight Grove brings its full live set to Kolkata for one unhurried evening under the lights.",
   "moonlit-market":
     "An after-dark city market with independent food, makers, music, and small discoveries worth lingering over.",
   "designing-for-joy":
     "A practical and generous workshop for people building more thoughtful, human work and wanting a little more joy in the process.",
   "late-laughs-club":
     "A tight, late-night comedy bill with fresh sets, sharp observations, and no pressure to become part of the show.",
-  "mumbai-hoops-night":
+  "kolkata-hoops-night":
     "A high-energy home-court night with big plays, louder crowds, and a game that keeps moving until the final buzzer.",
   "harbour-derby":
     "Two local rivals, one historic ground, and a match-day atmosphere that starts long before kickoff.",
   "glow-kayak":
-    "A guided evening paddle across Powai Lake with illuminated kayaks, a small group, and the city settling into night around you.",
+    "A guided evening paddle around Rabindra Sarobar, with a small group and the city settling into night around you.",
 };
 
 const artistsByType: Record<string, EventDetail["artists"]> = {
@@ -67,7 +67,7 @@ const artistsByType: Record<string, EventDetail["artists"]> = {
     { name: "Nikhil Rao", role: "Featuring" },
   ],
   SPORT: [
-    { name: "Mumbai Hoops", role: "Home team" },
+    { name: "Kolkata Hoops", role: "Home team" },
     { name: "Harbour Athletic", role: "Away team" },
   ],
   FESTIVAL: [
@@ -75,7 +75,7 @@ const artistsByType: Record<string, EventDetail["artists"]> = {
     { name: "Local makers and food partners", role: "Featuring" },
   ],
   WORKSHOP: [{ name: "Aanya Sharma", role: "Workshop host" }],
-  ADVENTURE: [{ name: "Powai Paddle Collective", role: "Guides" }],
+  ADVENTURE: [{ name: "Kolkata Paddle Collective", role: "Guides" }],
 };
 
 const categoryFromEventType: Record<string, EventDetail["category"]> = {
@@ -113,6 +113,7 @@ function mockEventDetail(item: ContentCard): EventDetail {
   const eventType = item.eventType ?? "LOCAL";
   const duration =
     eventType === "CONCERT" ? "2h 30m" : eventType === "SPORT" ? "2h" : "2h";
+  const durationMinutes = eventType === "CONCERT" ? 150 : 120;
 
   return {
     id: item.id,
@@ -128,7 +129,9 @@ function mockEventDetail(item: ContentCard): EventDetail {
     rating: item.rating,
     dateLabel: formatDate(startsAt),
     timeLabel: item.timeLabel,
+    startDate: startsAt.toISOString(),
     duration,
+    durationMinutes,
     language: item.language?.split(", ") ?? ["English"],
     ageRestriction: eventType === "COMEDY" ? "16+" : "All ages",
     artists: artistsByType[eventType] ?? [
@@ -181,7 +184,10 @@ function formatDatabaseEvent(
     rating: event.rating,
     dateLabel: formatDate(show?.startTime ?? event.startsAt),
     timeLabel: formatTime(show?.startTime ?? event.startsAt),
+    startDate: (show?.startTime ?? event.startsAt).toISOString(),
+    endDate: (show?.endTime ?? event.endsAt).toISOString(),
     duration: formatDuration(durationMinutes),
+    durationMinutes,
     language: event.language?.length ? event.language : ["English"],
     ageRestriction: event.ageRestriction ?? "All ages",
     artists: (event.artists ?? []).map((artist) => ({

@@ -13,7 +13,14 @@ const PersonCreditSchema = new Schema(
 const MovieSchema = new Schema(
   {
     title: { type: String, required: true, trim: true },
-    slug: { type: String, required: true, trim: true, lowercase: true },
+    slug: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+      immutable: true,
+      match: /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+    },
     poster: { type: String, required: true, trim: true },
     banner: { type: String, trim: true },
     description: { type: String, required: true, trim: true },

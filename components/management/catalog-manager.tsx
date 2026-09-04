@@ -316,7 +316,7 @@ export function CatalogManager() {
                 <Input
                   label="Search aliases"
                   name="aliases"
-                  placeholder="Bombay, Mumbai City"
+                  placeholder="Calcutta, Kolkata City"
                   defaultValue={city?.aliases.join(", ")}
                 />
                 <Toggle

@@ -1,10 +1,11 @@
-import type { Metadata } from "next";
 import { InfoPage } from "@/components/site/info-page";
+import { pageMetadata } from "@/lib/seo/site";
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: "Gift Cards | Show Time",
   description: "Gift card information for Show Time.",
-};
+  path: "/gift-cards",
+});
 
 export default function GiftCardsPage() {
   return (

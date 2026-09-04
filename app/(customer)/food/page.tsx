@@ -1,10 +1,12 @@
-import type { Metadata } from "next";
 import { FoodOrderPanel } from "@/components/food/food-order-panel";
+import { pageMetadata } from "@/lib/seo/site";
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: "Cinema food | Show Time",
   description: "Order food for confirmed cinema bookings.",
-};
+  path: "/food",
+  index: false,
+});
 
 export default async function FoodPage({
   searchParams,

@@ -1,10 +1,11 @@
-import type { Metadata } from "next";
 import { InfoPage } from "@/components/site/info-page";
+import { pageMetadata } from "@/lib/seo/site";
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: "Contact | Show Time",
   description: "Contact Show Time support and partnerships.",
-};
+  path: "/contact",
+});
 
 export default function ContactPage() {
   return (

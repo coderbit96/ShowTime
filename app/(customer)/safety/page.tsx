@@ -1,10 +1,11 @@
-import type { Metadata } from "next";
 import { InfoPage } from "@/components/site/info-page";
+import { pageMetadata } from "@/lib/seo/site";
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: "Safety | Show Time",
   description: "Safety and trust at Show Time.",
-};
+  path: "/safety",
+});
 
 export default function SafetyPage() {
   return (

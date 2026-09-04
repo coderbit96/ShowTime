@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { SearchX } from "lucide-react";
 import {
@@ -10,10 +11,26 @@ import {
   parseSearchParams,
   searchCatalog,
 } from "@/lib/search";
+import { pageMetadata } from "@/lib/seo/site";
 
 type SearchPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
+
+export async function generateMetadata({
+  searchParams,
+}: SearchPageProps): Promise<Metadata> {
+  const filters = parseSearchParams(toUrlSearchParams(await searchParams));
+  const query = filters.query?.trim();
+  return pageMetadata({
+    title: query ? `Search results for ${query}` : "Movies and events",
+    description: query
+      ? `Search results for ${query} on Show Time.`
+      : "Browse movies, events, and experiences in Kolkata on Show Time.",
+    path: "/search",
+    index: !query,
+  });
+}
 
 function toUrlSearchParams(
   values: Record<string, string | string[] | undefined>,
@@ -61,7 +78,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
       <div className="mx-auto max-w-7xl px-5 py-8 sm:px-6">
         <details className="mb-5 rounded-md border border-border bg-surface lg:hidden">
-          <summary className="cursor-pointer px-4 py-3 text-sm font-semibold">
+          <summary className="flex min-h-11 cursor-pointer items-center px-4 py-3 text-sm font-semibold">
             Filters
           </summary>
           <div className="border-t border-border p-3">

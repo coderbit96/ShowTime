@@ -756,7 +756,7 @@ function SubmitButton({ label, pending }: { label: string; pending: boolean }) {
     <button
       type="submit"
       disabled={pending}
-      className="mt-2 inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-accent disabled:opacity-60"
+      className="mt-2 inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-hover disabled:opacity-60"
     >
       {pending ? (
         <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />

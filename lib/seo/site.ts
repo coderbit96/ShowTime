@@ -1,6 +1,7 @@
 import { connectToDatabase } from "@/lib/mongodb/connect";
 import { mockCatalog } from "@/lib/catalog/mock-catalog";
 import { Event, Movie } from "@/models";
+import type { Metadata } from "next";
 
 export const siteUrl =
   process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
@@ -12,6 +13,41 @@ export function absoluteUrl(path: string) {
 
 export function canonicalPath(path: string) {
   return path === "/" ? "/" : path.replace(/\/$/, "");
+}
+
+export function pageMetadata({
+  title,
+  description,
+  path,
+  index = true,
+}: {
+  title: string;
+  description: string;
+  path: string;
+  index?: boolean;
+}): Metadata {
+  const canonical = absoluteUrl(canonicalPath(path));
+  const pageTitle = title.endsWith("| Show Time")
+    ? title
+    : `${title} | Show Time`;
+  return {
+    title: pageTitle,
+    description,
+    alternates: { canonical },
+    robots: index ? undefined : { index: false, follow: false },
+    openGraph: {
+      title: pageTitle,
+      description,
+      url: canonical,
+      siteName: "Show Time",
+      type: "website",
+    },
+    twitter: { card: "summary", title: pageTitle, description },
+  };
+}
+
+export function serializeJsonLd(value: unknown) {
+  return JSON.stringify(value).replace(/</g, "\\u003c");
 }
 
 export function breadcrumbJsonLd(items: Array<{ name: string; url: string }>) {
@@ -31,8 +67,8 @@ export function eventJsonLd(event: {
   title: string;
   description: string;
   banner: string;
-  dateLabel: string;
-  timeLabel: string;
+  startDate: string;
+  endDate?: string;
   venue: { name: string; address: string; city: string };
   priceFrom: number;
   organizer: { name: string };
@@ -43,7 +79,8 @@ export function eventJsonLd(event: {
     name: event.title,
     description: event.description,
     image: [event.banner],
-    startDate: `${event.dateLabel} ${event.timeLabel}`,
+    startDate: event.startDate,
+    ...(event.endDate ? { endDate: event.endDate } : {}),
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
     eventStatus: "https://schema.org/EventScheduled",
     location: {
@@ -76,9 +113,9 @@ export function movieJsonLd(movie: {
   poster: string;
   genre: string[];
   language: string[];
-  duration: string;
+  durationMinutes: number;
   rating: number;
-  releaseDate: string;
+  releaseDateISO: string;
   cast: Array<{ name: string }>;
   crew: Array<{ name: string; role: string }>;
 }) {
@@ -90,8 +127,8 @@ export function movieJsonLd(movie: {
     image: [movie.banner, movie.poster],
     genre: movie.genre,
     inLanguage: movie.language,
-    duration: movie.duration,
-    datePublished: movie.releaseDate,
+    duration: `PT${movie.durationMinutes}M`,
+    datePublished: movie.releaseDateISO,
     actor: movie.cast.map((person) => ({
       "@type": "Person",
       name: person.name,
@@ -114,6 +151,14 @@ export async function getSitemapEntries() {
   const staticEntries = [
     { url: absoluteUrl("/"), priority: 1 },
     { url: absoluteUrl("/search"), priority: 0.8 },
+    { url: absoluteUrl("/about"), priority: 0.5 },
+    { url: absoluteUrl("/contact"), priority: 0.5 },
+    { url: absoluteUrl("/help"), priority: 0.5 },
+    { url: absoluteUrl("/safety"), priority: 0.4 },
+    { url: absoluteUrl("/cancellation"), priority: 0.4 },
+    { url: absoluteUrl("/gift-cards"), priority: 0.4 },
+    { url: absoluteUrl("/press"), priority: 0.3 },
+    { url: absoluteUrl("/careers"), priority: 0.3 },
     { url: absoluteUrl("/groups"), priority: 0.5 },
   ];
   try {
@@ -124,7 +169,7 @@ export async function getSitemapEntries() {
         .lean(),
       Movie.find({ active: true }).select("slug updatedAt").lean(),
     ]);
-    return [
+    const databaseEntries = [
       ...staticEntries,
       ...events.map((event) => ({
         url: absoluteUrl(`/events/${event.slug}`),
@@ -137,6 +182,22 @@ export async function getSitemapEntries() {
         priority: 0.9,
       })),
     ];
+    const fallbackEntries = mockCatalog.map((item) => ({
+      url: absoluteUrl(
+        item.category === "Movie"
+          ? `/movies/${item.slug}`
+          : `/events/${item.slug}`,
+      ),
+      priority: 0.75,
+    }));
+    return Array.from(
+      new Map(
+        [...databaseEntries, ...fallbackEntries].map((entry) => [
+          entry.url,
+          entry,
+        ]),
+      ).values(),
+    );
   } catch {
     return [
       ...staticEntries,

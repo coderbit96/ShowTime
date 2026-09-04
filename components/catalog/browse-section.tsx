@@ -15,10 +15,10 @@ export function BrowseSection({
   children,
 }: BrowseSectionProps) {
   return (
-    <section id={id} className="scroll-mt-24 py-9 sm:py-12">
+    <section id={id} className="scroll-mt-24 py-10 sm:py-14">
       <div className="mb-6 flex items-end justify-between gap-5">
         <div>
-          <p className="mb-2 h-1 w-12 rounded-full bg-[linear-gradient(90deg,var(--secondary),var(--accent))]" />
+          <p className="mb-3 h-1 w-12 rounded-full bg-[linear-gradient(90deg,var(--primary),var(--gradient-accent))]" />
           <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
             {title}
           </h2>

@@ -14,7 +14,12 @@ import {
 } from "lucide-react";
 import { CardHover, ScrollReveal } from "@/components/motion";
 import { getEventDetail } from "@/lib/catalog";
-import { absoluteUrl, breadcrumbJsonLd, eventJsonLd } from "@/lib/seo/site";
+import {
+  absoluteUrl,
+  breadcrumbJsonLd,
+  eventJsonLd,
+  serializeJsonLd,
+} from "@/lib/seo/site";
 
 type EventPageProps = {
   params: Promise<{ slug: string }>;
@@ -92,10 +97,10 @@ export default async function EventDetailPage({ params }: EventPageProps) {
   ];
 
   return (
-    <main className="bg-background text-foreground">
+    <main className="bg-background pb-20 text-foreground lg:pb-0">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(structuredData) }}
       />
       <section className="relative isolate overflow-hidden border-b border-border">
         <Image
@@ -126,7 +131,7 @@ export default async function EventDetailPage({ params }: EventPageProps) {
             <h1 className="mt-4 text-4xl font-semibold leading-tight sm:text-5xl">
               {event.title}
             </h1>
-            <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm text-primary-foreground/80">
+            <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm text-foreground/80">
               <span className="inline-flex items-center gap-1.5">
                 <CalendarDays
                   className="size-4 text-secondary"
@@ -156,7 +161,7 @@ export default async function EventDetailPage({ params }: EventPageProps) {
               {bookingHref ? (
                 <Link
                   href={bookingHref}
-                  className="inline-flex h-12 items-center gap-2 rounded-md bg-accent px-5 text-sm font-semibold text-accent-foreground shadow-[0_0_28px_rgba(244,63,94,0.42)] transition-colors hover:bg-warning"
+                  className="inline-flex h-12 items-center gap-2 rounded-md bg-cta px-5 text-sm font-semibold text-cta-foreground shadow-[0_0_28px_rgba(124,58,237,0.42)] transition-colors hover:bg-cta-hover"
                 >
                   <Ticket className="size-4" aria-hidden="true" />
                   Book Tickets
@@ -167,7 +172,7 @@ export default async function EventDetailPage({ params }: EventPageProps) {
                   Showtimes coming soon
                 </span>
               )}
-              <p className="text-sm font-medium text-primary-foreground/82">
+              <p className="text-sm font-medium text-foreground/82">
                 Tickets from {"\u20b9"}
                 {event.priceFrom}
               </p>
@@ -314,7 +319,7 @@ export default async function EventDetailPage({ params }: EventPageProps) {
                 {bookingHref ? (
                   <Link
                     href={bookingHref}
-                    className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-accent px-4 text-sm font-semibold text-accent-foreground transition-colors hover:bg-warning"
+                    className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-cta px-4 text-sm font-semibold text-cta-foreground transition-colors hover:bg-cta-hover"
                   >
                     <Ticket className="size-4" aria-hidden="true" />
                     Book Tickets
@@ -335,7 +340,7 @@ export default async function EventDetailPage({ params }: EventPageProps) {
         <div className="sticky bottom-0 z-30 border-t border-border bg-background/95 p-3 backdrop-blur lg:hidden">
           <Link
             href={bookingHref}
-            className="mx-auto flex h-11 max-w-7xl items-center justify-center gap-2 rounded-md bg-accent px-4 text-sm font-semibold text-accent-foreground"
+            className="mx-auto flex h-11 max-w-7xl items-center justify-center gap-2 rounded-md bg-cta px-4 text-sm font-semibold text-cta-foreground"
           >
             <Ticket className="size-4" aria-hidden="true" />
             Book Tickets from {"\u20b9"}

@@ -102,7 +102,7 @@ export function GlobalSearch({
         ) : null}
         {showCity ? (
           <span className="premium-chip hidden px-2.5 py-1 text-xs font-medium text-muted sm:inline-flex">
-            Mumbai
+            Kolkata
           </span>
         ) : null}
       </form>

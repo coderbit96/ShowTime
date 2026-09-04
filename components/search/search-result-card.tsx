@@ -22,7 +22,7 @@ export function SearchResultCard({ item }: { item: ContentCard }) {
           className="object-cover transition-transform duration-300 group-hover:scale-[1.045]"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background/72 via-transparent to-transparent" />
-        <span className="premium-chip absolute bottom-3 left-3 px-2.5 py-1 text-[11px] font-medium text-primary-foreground">
+        <span className="premium-chip absolute bottom-3 left-3 px-2.5 py-1 text-[11px] font-medium text-foreground">
           {item.category}
         </span>
       </div>

@@ -1,11 +1,13 @@
-import type { Metadata } from "next";
 import { Suspense } from "react";
 import { AuthPanel } from "@/components/auth/auth-panel";
+import { pageMetadata } from "@/lib/seo/site";
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: "Login | Show Time",
   description: "Login to your Show Time account.",
-};
+  path: "/auth/login",
+  index: false,
+});
 
 export default function LoginPage() {
   return (

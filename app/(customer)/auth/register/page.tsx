@@ -1,11 +1,13 @@
-import type { Metadata } from "next";
 import { Suspense } from "react";
 import { AuthPanel } from "@/components/auth/auth-panel";
+import { pageMetadata } from "@/lib/seo/site";
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: "Register | Show Time",
   description: "Create a customer or organizer account.",
-};
+  path: "/auth/register",
+  index: false,
+});
 
 export default function RegisterPage() {
   return (

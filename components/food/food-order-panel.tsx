@@ -162,7 +162,7 @@ export function FoodOrderPanel({
               type="button"
               onClick={() => void order()}
               disabled={!selectedItems.length || ordering}
-              className="h-11 rounded-md bg-accent px-5 text-sm font-semibold text-accent-foreground disabled:opacity-45"
+              className="h-11 rounded-md bg-cta px-5 text-sm font-semibold text-cta-foreground disabled:opacity-45"
             >
               {ordering ? "Ordering..." : "Pay with wallet"}
             </button>

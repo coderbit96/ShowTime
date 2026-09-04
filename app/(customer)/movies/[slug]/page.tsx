@@ -13,7 +13,12 @@ import {
 import { CardHover, ScrollReveal } from "@/components/motion";
 import { ShowtimePicker } from "@/components/movies";
 import { getMovieDetail } from "@/lib/catalog";
-import { absoluteUrl, breadcrumbJsonLd, movieJsonLd } from "@/lib/seo/site";
+import {
+  absoluteUrl,
+  breadcrumbJsonLd,
+  movieJsonLd,
+  serializeJsonLd,
+} from "@/lib/seo/site";
 
 type MoviePageProps = {
   params: Promise<{ slug: string }>;
@@ -111,7 +116,7 @@ export default async function MovieDetailPage({ params }: MoviePageProps) {
     <main className="bg-background text-foreground">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(structuredData) }}
       />
       <section className="relative isolate overflow-hidden border-b border-border">
         <Image
@@ -141,10 +146,10 @@ export default async function MovieDetailPage({ params }: MoviePageProps) {
             <h1 className="mt-4 text-4xl font-semibold leading-tight sm:text-5xl">
               {movie.title}
             </h1>
-            <p className="mt-4 text-sm font-medium text-primary-foreground/78">
+            <p className="mt-4 text-sm font-medium text-foreground/78">
               {movie.genre.join(" / ")}
             </p>
-            <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm text-primary-foreground/80">
+            <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm text-foreground/80">
               <span className="inline-flex items-center gap-1.5">
                 <Clock3 className="size-4 text-secondary" aria-hidden="true" />
                 {movie.duration}
@@ -171,12 +176,12 @@ export default async function MovieDetailPage({ params }: MoviePageProps) {
             <div className="mt-7 flex flex-wrap items-center gap-4">
               <Link
                 href="#showtimes"
-                className="inline-flex h-12 items-center gap-2 rounded-md bg-accent px-5 text-sm font-semibold text-accent-foreground shadow-[0_0_28px_rgba(244,63,94,0.42)] transition-colors hover:bg-warning"
+                className="inline-flex h-12 items-center gap-2 rounded-md bg-cta px-5 text-sm font-semibold text-cta-foreground shadow-[0_0_28px_rgba(124,58,237,0.42)] transition-colors hover:bg-cta-hover"
               >
                 <Play className="size-4 fill-current" aria-hidden="true" />
                 Select Showtime
               </Link>
-              <p className="text-sm text-primary-foreground/78">
+              <p className="text-sm text-foreground/78">
                 In cinemas from {"\u20b9"}
                 {startingPrice}
               </p>
@@ -271,7 +276,10 @@ export default async function MovieDetailPage({ params }: MoviePageProps) {
           </ScrollReveal>
         </div>
         <aside className="lg:sticky lg:top-20 lg:self-start">
-          <ShowtimePicker showtimes={movie.showtimes} />
+          <ShowtimePicker
+            showtimes={movie.showtimes}
+            cinemaChoices={movie.cinemaChoices}
+          />
         </aside>
       </div>
     </main>

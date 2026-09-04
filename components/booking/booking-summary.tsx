@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircle2, LoaderCircle, Ticket } from "lucide-react";
+import { CheckCircle2, LoaderCircle, PartyPopper, Ticket } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { firebaseAuth } from "@/lib/firebase/client";
 import { RazorpayCheckout } from "./razorpay-checkout";
@@ -26,6 +27,15 @@ type Summary = {
   expiresAt: string;
 };
 type PendingBooking = Summary & { bookingId: string; status: "PENDING" };
+
+const confettiPieces = Array.from({ length: 34 }, (_, index) => ({
+  color: ["#06b6d4", "#f43f5e", "#fbbf24", "#8b5cf6", "#f8fafc"][index % 5],
+  delay: (index % 9) * 0.035,
+  drift: ((index * 37) % 220) - 110,
+  left: 6 + ((index * 29) % 88),
+  rotate: 180 + ((index * 71) % 300),
+  size: 5 + (index % 4) * 2,
+}));
 
 export function BookingSummary({
   showId,
@@ -248,23 +258,26 @@ export function BookingSummary({
 
   if (booking)
     return (
-      <section className="rounded-md border border-secondary/45 bg-secondary/10 p-6 text-center sm:p-10">
-        <CheckCircle2
-          className="mx-auto size-10 text-secondary"
-          aria-hidden="true"
-        />
-        <h1 className="mt-4 text-2xl font-semibold">Booking reserved</h1>
-        <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted">
-          Your pending booking is ready for payment. Payment setup is the next
-          checkout step.
-        </p>
-        <p className="mt-5 font-mono text-sm text-foreground">
-          {booking.bookingId}
-        </p>
-        <RazorpayCheckout
-          bookingId={booking.bookingId}
-          total={booking.pricing.total}
-        />
+      <section className="relative isolate overflow-hidden rounded-xl border border-secondary/45 bg-secondary/10 p-6 text-center shadow-[0_22px_70px_rgba(6,182,212,0.12)] sm:p-10">
+        <ReservationCelebration />
+        <div className="relative z-10">
+          <CheckCircle2
+            className="mx-auto size-10 text-secondary"
+            aria-hidden="true"
+          />
+          <h1 className="mt-4 text-2xl font-semibold">Booking reserved</h1>
+          <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted">
+            Your pending booking is ready for payment. Payment setup is the next
+            checkout step.
+          </p>
+          <p className="mt-5 font-mono text-sm text-foreground">
+            {booking.bookingId}
+          </p>
+          <RazorpayCheckout
+            bookingId={booking.bookingId}
+            total={booking.pricing.total}
+          />
+        </div>
       </section>
     );
 
@@ -293,7 +306,7 @@ export function BookingSummary({
           <label className="text-sm font-semibold" htmlFor="coupon">
             Promo code
           </label>
-          <div className="mt-2 flex gap-2">
+          <div className="mt-2 flex flex-col gap-2 sm:flex-row">
             <input
               id="coupon"
               value={coupon}
@@ -303,13 +316,13 @@ export function BookingSummary({
                 if (summary.coupon && baseSummary) setSummary(baseSummary);
               }}
               placeholder="Enter code"
-              className="h-10 min-w-0 flex-1 rounded-sm border border-border bg-background px-3 text-sm outline-none transition-colors placeholder:text-muted focus:border-secondary"
+              className="h-11 min-w-0 flex-1 rounded-sm border border-border bg-background px-3 text-sm outline-none transition-colors placeholder:text-muted focus:border-secondary"
             />
             <button
               type="button"
               onClick={() => void applyCoupon()}
               disabled={!coupon || applyingCoupon}
-              className="h-10 rounded-sm border border-border px-4 text-sm font-semibold text-muted disabled:opacity-45"
+              className="h-11 rounded-sm border border-border px-4 text-sm font-semibold text-muted disabled:opacity-45"
             >
               {applyingCoupon ? "Applying..." : "Apply"}
             </button>
@@ -366,7 +379,7 @@ export function BookingSummary({
             type="button"
             onClick={() => void createBooking()}
             disabled={creating || Boolean(error)}
-            className="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-accent px-4 text-sm font-semibold text-accent-foreground transition-colors hover:bg-warning disabled:cursor-not-allowed disabled:opacity-45"
+            className="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-cta px-4 text-sm font-semibold text-cta-foreground transition-colors hover:bg-cta-hover disabled:cursor-not-allowed disabled:opacity-45"
           >
             {creating ? (
               <LoaderCircle className="size-4 animate-spin" />
@@ -379,12 +392,74 @@ export function BookingSummary({
             type="button"
             onClick={() => void returnToSeats()}
             disabled={releasing || creating}
-            className="mt-3 inline-flex h-10 w-full items-center justify-center text-sm font-semibold text-muted hover:text-foreground disabled:opacity-45"
+            className="mt-3 inline-flex h-11 w-full items-center justify-center text-sm font-semibold text-muted hover:text-foreground disabled:opacity-45"
           >
             {releasing ? "Returning..." : "Change seats"}
           </button>
         </section>
       </aside>
+    </div>
+  );
+}
+
+function ReservationCelebration() {
+  const reduceMotion = useReducedMotion();
+
+  return (
+    <div
+      className="pointer-events-none absolute inset-0 overflow-hidden"
+      aria-hidden="true"
+    >
+      {!reduceMotion
+        ? confettiPieces.map((piece, index) => (
+            <motion.i
+              key={index}
+              className="absolute top-7 block rounded-sm"
+              style={{
+                backgroundColor: piece.color,
+                height: piece.size * 1.7,
+                left: `${piece.left}%`,
+                width: piece.size,
+              }}
+              initial={{ opacity: 0, rotate: 0, x: 0, y: -28 }}
+              animate={{
+                opacity: [0, 1, 1, 0],
+                rotate: piece.rotate,
+                x: piece.drift,
+                y: 250 + (index % 5) * 22,
+              }}
+              transition={{
+                delay: piece.delay,
+                duration: 1.55 + (index % 4) * 0.12,
+                ease: "easeOut",
+              }}
+            />
+          ))
+        : null}
+      <motion.div
+        className="absolute left-5 top-6 text-warning sm:left-9 sm:top-8"
+        initial={reduceMotion ? false : { opacity: 0, rotate: -28, scale: 0.7 }}
+        animate={
+          reduceMotion
+            ? { opacity: 0.55 }
+            : { opacity: 1, rotate: 12, scale: 1 }
+        }
+        transition={{ delay: 0.08, duration: 0.42, ease: "backOut" }}
+      >
+        <PartyPopper className="size-7 sm:size-9" />
+      </motion.div>
+      <motion.div
+        className="absolute right-5 top-6 rotate-y-180 text-accent sm:right-9 sm:top-8"
+        initial={reduceMotion ? false : { opacity: 0, rotate: 28, scale: 0.7 }}
+        animate={
+          reduceMotion
+            ? { opacity: 0.55 }
+            : { opacity: 1, rotate: -12, scale: 1 }
+        }
+        transition={{ delay: 0.14, duration: 0.42, ease: "backOut" }}
+      >
+        <PartyPopper className="size-7 sm:size-9" />
+      </motion.div>
     </div>
   );
 }

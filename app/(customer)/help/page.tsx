@@ -1,10 +1,11 @@
-import type { Metadata } from "next";
 import { InfoPage } from "@/components/site/info-page";
+import { pageMetadata } from "@/lib/seo/site";
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: "Help Center | Show Time",
   description: "Help and support for Show Time bookings.",
-};
+  path: "/help",
+});
 
 export default function HelpPage() {
   return (

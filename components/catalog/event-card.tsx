@@ -10,31 +10,31 @@ type EventCardProps = {
 
 export function EventCard({ event }: EventCardProps) {
   return (
-    <CardHover className="w-[268px] shrink-0 snap-start sm:w-[286px]">
+    <CardHover className="w-[276px] shrink-0 snap-start sm:w-[300px]">
       <Link
         href={`/events/${event.slug}`}
-        className="premium-card group block overflow-hidden rounded-md"
+        className="premium-card group block overflow-hidden rounded-2xl"
       >
         <div className="relative aspect-[16/10] overflow-hidden bg-surface-muted">
           <Image
             src={event.image}
             alt={event.title + " event"}
             fill
-            sizes="(max-width: 640px) 268px, 286px"
+            sizes="(max-width: 640px) 276px, 300px"
             className="object-cover transition-transform duration-300 group-hover:scale-[1.045]"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-background/78 via-transparent to-transparent opacity-80" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/8 to-transparent" />
           {event.badge ? (
-            <span className="absolute left-3 top-3 rounded-md bg-accent px-2.5 py-1 text-[11px] font-semibold text-accent-foreground shadow-[0_0_22px_rgba(244,63,94,0.34)]">
+            <span className="absolute left-3 top-3 rounded-full bg-gradient-accent px-2.5 py-1 text-[11px] font-bold text-cta-foreground shadow-[0_0_22px_rgba(168,85,247,0.34)]">
               {event.badge}
             </span>
           ) : null}
-          <span className="premium-chip absolute bottom-3 right-3 px-2.5 py-1 text-[11px] font-medium text-primary-foreground">
+          <span className="premium-chip absolute bottom-3 right-3 px-2.5 py-1 text-[11px] font-medium text-foreground">
             {event.category}
           </span>
         </div>
-        <div className="p-3.5">
-          <h3 className="truncate text-sm font-semibold group-hover:text-secondary">
+        <div className="p-4">
+          <h3 className="truncate text-base font-semibold group-hover:text-primary">
             {event.title}
           </h3>
           <p className="mt-2 flex items-center gap-1.5 truncate text-xs text-muted">

@@ -40,7 +40,7 @@ export function InfoPage({
       <div className="mt-10 flex flex-wrap gap-3">
         <Link
           href="/search"
-          className="inline-flex h-11 items-center rounded-md bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-accent"
+          className="inline-flex h-11 items-center rounded-md bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-hover"
         >
           Explore shows
         </Link>

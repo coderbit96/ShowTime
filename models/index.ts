@@ -31,3 +31,4 @@ export * from "./venues";
 export * from "./walletPasses";
 export * from "./wallets";
 export * from "./walletTransactions";
+export * from "./walletTopUps";

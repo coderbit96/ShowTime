@@ -1,11 +1,15 @@
-import type { Metadata } from "next";
 import { AuthRequired } from "@/components/auth/auth-required";
 import { SeatPicker } from "@/components/booking";
+import { resolveLegacyMovieShowId } from "@/lib/catalog/legacy-showtime";
+import { pageMetadata } from "@/lib/seo/site";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: "Choose seats | Show Time",
   description: "Choose seats for your show.",
-};
+  path: "/booking",
+  index: false,
+});
 
 export default async function BookingPage({
   searchParams,
@@ -22,6 +26,15 @@ export default async function BookingPage({
         </p>
       </main>
     );
+  if (!/^[a-f\d]{24}$/i.test(showId)) {
+    const persistedShowId = await resolveLegacyMovieShowId(showId);
+    if (persistedShowId) {
+      const query = new URLSearchParams({ showId: persistedShowId });
+      if (notice) query.set("notice", notice);
+      if (groupId) query.set("groupId", groupId);
+      redirect(`/booking?${query.toString()}`);
+    }
+  }
   return (
     <main className="mx-auto min-h-screen max-w-7xl px-5 py-8 text-foreground sm:px-6">
       <AuthRequired>

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import {
   BrowseSection,
+  CategoryExplorer,
   ContentRail,
   EventCard,
   FlashSaleBanner,
@@ -44,39 +45,47 @@ export default async function CustomerHomePage() {
 
   return (
     <main className="overflow-hidden bg-background text-foreground">
-      <section className="relative isolate min-h-[620px] overflow-hidden bg-background text-primary-foreground">
+      <section className="relative isolate min-h-[620px] overflow-hidden bg-background text-foreground">
         <Image
-          src="/images/midnight-festival-hero.png"
-          alt="Guests arriving at an open-air cultural festival in Mumbai"
+          src="/images/catalog/midnight-grove-live.png"
+          alt="Guests arriving at an open-air cultural festival in Kolkata"
           fill
           priority
           sizes="100vw"
           className="object-cover object-center"
         />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(11,11,20,0.94),rgba(11,11,20,0.72)_44%,rgba(11,11,20,0.42))]" />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent,rgba(11,11,20,0.92))]" />
-        <div className="absolute inset-x-0 top-0 h-40 bg-[linear-gradient(180deg,rgba(124,58,237,0.28),transparent)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(7,11,20,0.96),rgba(7,11,20,0.78)_46%,rgba(7,11,20,0.46))]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent,rgba(7,11,20,0.94))]" />
+        <div className="absolute inset-x-0 top-0 h-48 bg-[linear-gradient(180deg,rgba(124,58,237,0.36),transparent)]" />
 
         <div className="relative mx-auto flex min-h-[620px] max-w-7xl flex-col px-5 pb-24 pt-12 sm:px-6 sm:pt-16 lg:justify-center lg:pb-28">
           <div className="max-w-2xl">
-            <div className="premium-chip inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-primary-foreground/88">
+            <div className="premium-chip inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold text-foreground/88">
               <MapPin className="size-3.5 text-secondary" aria-hidden="true" />
               Around you in {catalog.city}
             </div>
-            <p className="mt-7 text-sm font-semibold uppercase tracking-[0.16em] text-secondary">
-              Trending now
+            <p className="mt-7 text-xs font-bold uppercase tracking-[0.18em] text-primary">
+              Kolkata is happening
             </p>
             <h1 className="mt-4 max-w-2xl text-4xl font-semibold leading-[1.02] tracking-tight sm:text-5xl lg:text-7xl">
-              Feel the Stage. Live the Moment.
+              Make tonight worth talking about.
             </h1>
-            <p className="mt-5 max-w-lg text-base leading-7 text-primary-foreground/78 sm:text-lg">
+            <p className="mt-5 max-w-lg text-base leading-7 text-foreground/78 sm:text-lg">
               Discover movies, concerts, sports and experiences near you.
             </p>
-            <div className="premium-panel mt-7 max-w-xl rounded-md p-4">
-              <p className="text-lg font-semibold text-primary-foreground">
+            <div className="premium-panel mt-7 max-w-xl rounded-2xl p-4 sm:p-5">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-primary">
+                  Up next
+                </p>
+                <span className="rounded-full bg-success/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-success">
+                  Live soon
+                </span>
+              </div>
+              <p className="mt-2 text-lg font-semibold text-foreground">
                 {catalog.hero.title}
               </p>
-              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-sm text-primary-foreground/76">
+              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-sm text-foreground/76">
                 <span className="inline-flex items-center gap-1.5">
                   <CalendarDays
                     className="size-4 text-secondary"
@@ -119,10 +128,10 @@ export default async function CustomerHomePage() {
             </div>
           </div>
 
-          <div className="premium-panel mt-auto hidden max-w-2xl rounded-md p-4 text-sm text-primary-foreground/78 lg:block">
+          <div className="premium-panel mt-auto hidden max-w-2xl rounded-2xl p-4 text-sm text-foreground/78 lg:block">
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <p className="text-xl font-semibold text-secondary">12+</p>
+                <p className="text-xl font-semibold text-primary">12+</p>
                 <p className="mt-1 text-xs text-muted">categories</p>
               </div>
               <div>
@@ -142,7 +151,9 @@ export default async function CustomerHomePage() {
         <HomepageSearch />
       </div>
 
-      <div className="mt-8">
+      <CategoryExplorer />
+
+      <div className="mt-10">
         <FlashSaleBanner flashSale={flashSale} />
       </div>
 
@@ -224,7 +235,7 @@ export default async function CustomerHomePage() {
         </ScrollReveal>
       </div>
 
-      <section className="border-y border-white/10 bg-[linear-gradient(180deg,rgba(32,32,51,0.9),rgba(21,21,34,0.72))]">
+      <section className="border-y border-border bg-[linear-gradient(180deg,rgba(25,36,58,0.92),rgba(19,28,46,0.76))]">
         <div className="mx-auto max-w-7xl px-5 sm:px-6">
           <ScrollReveal>
             <BrowseSection
@@ -268,7 +279,7 @@ export default async function CustomerHomePage() {
         </ScrollReveal>
       </div>
 
-      <section className="border-y border-white/10 bg-[linear-gradient(135deg,rgba(124,58,237,0.82),rgba(21,21,34,0.96)_52%,rgba(6,182,212,0.24))] text-primary-foreground">
+      <section className="border-y border-border bg-[linear-gradient(135deg,rgba(124,58,237,0.82),rgba(13,19,33,0.96)_52%,rgba(6,182,212,0.24))] text-foreground">
         <div className="mx-auto max-w-7xl px-5 py-11 sm:px-6 sm:py-14">
           <ScrollReveal>
             <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -281,7 +292,7 @@ export default async function CustomerHomePage() {
                   Personalized Recommendations
                 </h2>
               </div>
-              <p className="max-w-sm text-sm leading-6 text-primary-foreground/72">
+              <p className="max-w-sm text-sm leading-6 text-foreground/72">
                 A practical mix of the things you usually browse and the ones
                 that might surprise you.
               </p>
@@ -293,7 +304,7 @@ export default async function CustomerHomePage() {
         </div>
       </section>
 
-      <section className="border-b border-white/10 bg-[linear-gradient(180deg,rgba(21,21,34,0.72),rgba(11,11,20,0.96))]">
+      <section className="border-b border-border bg-[linear-gradient(180deg,rgba(19,28,46,0.78),rgba(7,11,20,0.98))]">
         <div className="mx-auto grid max-w-7xl gap-8 px-5 py-12 sm:px-6 md:grid-cols-[1fr_0.9fr] md:items-center">
           <div>
             <p className="inline-flex items-center gap-2 text-sm font-semibold text-berry">

@@ -78,7 +78,7 @@ export function TicketView({ ticketId }: { ticketId: string }) {
     <div className="mx-auto w-full max-w-xl">
       <div
         ref={cardRef}
-        className="rounded-md border border-border bg-surface p-6"
+        className="rounded-md border border-border bg-surface p-4 sm:p-6"
       >
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-secondary">
           Confirmed ticket
@@ -118,7 +118,7 @@ export function TicketView({ ticketId }: { ticketId: string }) {
           <img
             src={qr}
             alt="Scannable ticket QR code"
-            className="size-60 max-w-full bg-white p-2 sm:size-64"
+            className="size-64 max-w-full bg-white p-2 sm:size-72"
           />
         </div>
         <p className="mt-4 text-center font-mono text-xs text-muted">
@@ -129,7 +129,7 @@ export function TicketView({ ticketId }: { ticketId: string }) {
         <button
           type="button"
           onClick={() => setFullScreen(true)}
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-accent text-sm font-semibold text-accent-foreground"
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-cta text-sm font-semibold text-cta-foreground"
         >
           <Maximize2 className="size-4" />
           Show QR
@@ -147,12 +147,23 @@ export function TicketView({ ticketId }: { ticketId: string }) {
         <div
           className="fixed inset-0 z-50 grid place-items-center bg-background p-5"
           onClick={() => setFullScreen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Full-screen ticket QR code"
         >
+          <button
+            type="button"
+            onClick={() => setFullScreen(false)}
+            className="absolute right-4 top-4 inline-flex h-11 items-center justify-center rounded-md border border-border px-4 text-sm font-semibold"
+          >
+            Close
+          </button>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={qr}
             alt="Full-screen ticket QR code"
             className="w-[min(86vw,480px)] bg-white p-3"
+            onClick={(event) => event.stopPropagation()}
           />
         </div>
       ) : null}

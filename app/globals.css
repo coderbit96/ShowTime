@@ -1,36 +1,54 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0b0b14;
+  --background: #070b14;
   --foreground: #f8fafc;
-  --surface: #151522;
-  --surface-muted: #202033;
-  --border: #33334d;
-  --primary: #7c3aed;
-  --primary-foreground: #f8fafc;
-  --secondary: #06b6d4;
-  --secondary-foreground: #06232b;
+  --section: #0d1321;
+  --surface: #131c2e;
+  --surface-muted: #19243a;
+  --elevated: #19243a;
+  --border: #263449;
+  --primary: #06b6d4;
+  --primary-hover: #22d3ee;
+  --primary-foreground: #06232b;
+  --secondary: #7c3aed;
+  --secondary-text: #a78bfa;
+  --secondary-foreground: #f8fafc;
+  --gradient-accent: #a855f7;
+  --cta: #7c3aed;
+  --cta-hover: #8b5cf6;
+  --cta-foreground: #f8fafc;
   --accent: #f43f5e;
-  --accent-foreground: #fff1f2;
-  --warning: #fbbf24;
-  --berry: #f43f5e;
-  --mist: #27273a;
+  --accent-foreground: #070b14;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --berry: #a855f7;
+  --mist: #19243a;
   --muted: #94a3b8;
-  --ring: #06b6d4;
+  --ring: #22d3ee;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-section: var(--section);
   --color-surface: var(--surface);
   --color-surface-muted: var(--surface-muted);
+  --color-elevated: var(--elevated);
   --color-border: var(--border);
   --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
+  --color-secondary-text: var(--secondary-text);
   --color-secondary-foreground: var(--secondary-foreground);
+  --color-gradient-accent: var(--gradient-accent);
+  --color-cta: var(--cta);
+  --color-cta-hover: var(--cta-hover);
+  --color-cta-foreground: var(--cta-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
   --color-warning: var(--warning);
   --color-berry: var(--berry);
   --color-mist: var(--mist);
@@ -41,17 +59,25 @@
 
 body {
   background:
-    linear-gradient(180deg, rgba(124, 58, 237, 0.1), transparent 420px),
-    linear-gradient(115deg, rgba(6, 182, 212, 0.07), transparent 48%),
+    linear-gradient(180deg, rgba(124, 58, 237, 0.12), transparent 420px),
+    linear-gradient(115deg, rgba(6, 182, 212, 0.09), transparent 48%),
     var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   text-rendering: optimizeLegibility;
 }
 
+/* #7C3AED remains the violet accent for fills and borders. Its lighter tint
+   preserves AA-readable text contrast against the midnight background. */
+.text-secondary,
+.hover\:text-secondary:hover,
+.group:hover .group-hover\:text-secondary {
+  color: var(--secondary-text);
+}
+
 ::selection {
-  background: var(--accent);
-  color: var(--accent-foreground);
+  background: var(--cta);
+  color: var(--cta-foreground);
 }
 
 button,
@@ -64,6 +90,18 @@ select {
 button,
 a {
   -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 639px) {
+  button {
+    min-height: 44px;
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    min-height: 44px;
+  }
 }
 
 button:not(:disabled),
@@ -99,17 +137,17 @@ textarea {
 }
 
 ::-webkit-scrollbar-track {
-  background: #0b0b14;
+  background: var(--background);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #33334d;
-  border: 2px solid #0b0b14;
+  background: var(--border);
+  border: 2px solid var(--background);
   border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #06b6d4;
+  background: var(--primary-hover);
 }
 
 @layer components {
@@ -148,11 +186,11 @@ textarea {
     background:
       linear-gradient(
         135deg,
-        rgba(244, 63, 94, 0.96),
-        rgba(124, 58, 237, 0.96)
+        rgba(124, 58, 237, 0.98),
+        rgba(168, 85, 247, 0.98)
       ),
-      var(--primary);
-    color: var(--primary-foreground);
+      var(--cta);
+    color: var(--cta-foreground);
     box-shadow:
       0 14px 34px rgba(124, 58, 237, 0.34),
       inset 0 1px 0 rgba(255, 255, 255, 0.18);
@@ -161,7 +199,7 @@ textarea {
   .premium-button:hover {
     transform: translateY(-1px);
     box-shadow:
-      0 18px 44px rgba(244, 63, 94, 0.28),
+      0 18px 44px rgba(168, 85, 247, 0.3),
       0 0 34px rgba(6, 182, 212, 0.16),
       inset 0 1px 0 rgba(255, 255, 255, 0.22);
   }

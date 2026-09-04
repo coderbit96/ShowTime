@@ -8,6 +8,7 @@ import {
   verifyRazorpayWebhookSignature,
 } from "@/lib/payments/razorpay";
 import { publishPaymentLifecycleNotifications } from "@/lib/notifications/create-notification";
+import { processWalletTopUpWebhook } from "@/lib/wallet/wallet-topup-service";
 
 type RazorpayWebhookPayload = {
   payload?: {
@@ -57,17 +58,27 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     }
-    const result = await processRazorpayWebhook({
+    const paymentEvent = {
       eventId,
       event,
       paymentId: payment.id,
       orderId: payment.order_id,
       amount: payment.amount,
       currency: payment.currency,
-      method: payment.method,
-      errorCode: payment.error_code,
-      errorDescription: payment.error_description,
-    });
+    };
+    let result;
+    try {
+      result = await processRazorpayWebhook({
+        ...paymentEvent,
+        method: payment.method,
+        errorCode: payment.error_code,
+        errorDescription: payment.error_description,
+      });
+    } catch (error) {
+      if (!(error instanceof PaymentFlowError) || error.status !== 404)
+        throw error;
+      result = await processWalletTopUpWebhook(paymentEvent);
+    }
     void publishPaymentLifecycleNotifications(result).catch((error) =>
       console.error("In-app notification dispatch failed", error),
     );

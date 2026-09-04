@@ -33,7 +33,7 @@ const footerGroups = [
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-white/10 bg-[linear-gradient(180deg,#151522,#0B0B14)] text-primary-foreground">
+    <footer className="border-t border-border bg-[linear-gradient(180deg,#0D1321,#070B14)] text-foreground">
       <div className="mx-auto grid max-w-7xl gap-10 px-6 py-12 md:grid-cols-[1.1fr_2fr_1.2fr]">
         <div>
           <Link href="/" className="group inline-flex items-center gap-2">
@@ -48,7 +48,7 @@ export function SiteFooter() {
               Show Time
             </span>
           </Link>
-          <p className="mt-4 max-w-xs text-sm leading-6 text-primary-foreground/72">
+          <p className="mt-4 max-w-xs text-sm leading-6 text-foreground/72">
             A quieter, sharper way to discover movies, shows, games, and local
             experiences.
           </p>
@@ -65,7 +65,7 @@ export function SiteFooter() {
                   <li key={link.label}>
                     <Link
                       href={link.href}
-                      className="text-sm text-primary-foreground/72 hover:text-secondary"
+                      className="text-sm text-foreground/72 hover:text-secondary"
                     >
                       {link.label}
                     </Link>
@@ -78,14 +78,14 @@ export function SiteFooter() {
 
         <div>
           <h2 className="text-sm font-semibold text-secondary">Show Time</h2>
-          <p className="mt-4 max-w-xs text-sm leading-6 text-primary-foreground/72">
+          <p className="mt-4 max-w-xs text-sm leading-6 text-foreground/72">
             Movies, live events, sports, and small reasons to spend a night out
             well.
           </p>
         </div>
       </div>
       <div className="border-t border-primary-foreground/10 px-6 py-4">
-        <div className="mx-auto flex max-w-7xl flex-col gap-2 text-xs text-primary-foreground/60 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mx-auto flex max-w-7xl flex-col gap-2 text-xs text-foreground/60 sm:flex-row sm:items-center sm:justify-between">
           <p>(c) 2026 Show Time. All rights reserved.</p>
           <p>Built for fast, secure booking flows.</p>
         </div>

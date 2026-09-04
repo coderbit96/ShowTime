@@ -44,14 +44,26 @@ const statusLabels: Record<SeatStatus | "SELECTED", string> = {
 
 const statusClasses: Record<SeatStatus | "SELECTED", string> = {
   AVAILABLE:
-    "border-primary/70 bg-primary/12 text-foreground hover:border-secondary hover:bg-secondary/15",
+    "border-slate-100/85 bg-slate-100 text-slate-950 shadow-[inset_0_-3px_0_rgba(15,23,42,0.3),0_2px_0_rgba(255,255,255,0.12)] hover:border-secondary hover:bg-secondary hover:text-secondary-foreground",
   SELECTED:
-    "border-secondary bg-secondary text-secondary-foreground shadow-[0_0_16px_rgba(6,182,212,0.35)]",
-  LOCKED: "cursor-not-allowed border-border bg-mist text-muted/65",
-  BOOKED: "cursor-not-allowed border-accent/55 bg-accent/20 text-accent",
+    "border-primary bg-primary text-primary-foreground shadow-[inset_0_-3px_0_rgba(6,35,43,0.32),0_0_18px_rgba(6,182,212,0.42)]",
+  LOCKED:
+    "cursor-not-allowed border-violet-300/25 bg-violet-400/20 text-violet-100/50",
+  BOOKED:
+    "cursor-not-allowed border-accent/55 bg-accent/30 text-accent-foreground/70",
   BLOCKED:
-    "cursor-not-allowed border-border bg-background text-muted/50 line-through",
+    "cursor-not-allowed border-border bg-background text-muted/45 line-through",
 };
+
+function splitSeatBlocks(seats: Seat[]) {
+  if (seats.length <= 3) return [seats];
+  const sideBlockSize = Math.max(1, Math.floor(seats.length / 4));
+  return [
+    seats.slice(0, sideBlockSize),
+    seats.slice(sideBlockSize, seats.length - sideBlockSize),
+    seats.slice(seats.length - sideBlockSize),
+  ].filter((block) => block.length);
+}
 
 export function SeatPicker({
   showId,
@@ -325,7 +337,7 @@ export function SeatPicker({
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
-      <section className="rounded-md border border-border bg-surface p-4 sm:p-6">
+      <section className="overflow-hidden rounded-xl border border-border bg-surface p-4 shadow-[0_20px_55px_rgba(0,0,0,0.22)] sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
@@ -336,7 +348,7 @@ export function SeatPicker({
           <button
             type="button"
             onClick={() => void load(true)}
-            className="inline-flex h-9 items-center gap-2 rounded-sm border border-border px-3 text-xs font-semibold text-muted transition-colors hover:bg-surface-muted hover:text-foreground"
+            className="inline-flex h-11 items-center gap-2 rounded-sm border border-border px-3 text-xs font-semibold text-muted transition-colors hover:bg-surface-muted hover:text-foreground"
             disabled={refreshing}
           >
             <RefreshCw
@@ -346,11 +358,14 @@ export function SeatPicker({
             Refresh
           </button>
         </div>
-        <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-xs text-muted">
+        <div className="mt-5 flex flex-wrap gap-2 text-xs text-muted">
           {(
             ["AVAILABLE", "SELECTED", "LOCKED", "BOOKED", "BLOCKED"] as const
           ).map((status) => (
-            <span key={status} className="inline-flex items-center gap-1.5">
+            <span
+              key={status}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-background/60 px-2.5 py-1.5"
+            >
               <span
                 className={`size-3 rounded-[3px] border ${statusClasses[status]}`}
                 aria-hidden="true"
@@ -370,52 +385,74 @@ export function SeatPicker({
           </p>
         ) : null}
 
-        <div className="mt-8 grid gap-7 overflow-x-auto overscroll-x-contain pb-3">
-          {data.layout.categories.map((category) => {
-            const rows = data.layout.rows.filter((row) =>
-              row.seats.some((seat) => seat.category === category),
-            );
-            if (!rows.length) return null;
-            return (
-              <section key={category}>
-                <div className="mb-3 flex items-center gap-3">
-                  <span className="h-px flex-1 bg-border" />
-                  <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
-                    {category}
-                  </h2>
-                  <span className="h-px flex-1 bg-border" />
-                </div>
-                <div className="grid gap-2">
-                  {rows.map((row) => (
-                    <div
-                      key={row.label}
-                      className="grid min-w-max gap-1.5"
-                      style={{
-                        gridTemplateColumns: `28px repeat(${row.seats.length}, minmax(36px, 40px))`,
-                      }}
-                    >
-                      <span className="grid h-9 place-items-center text-xs font-semibold text-muted">
-                        {row.label}
-                      </span>
-                      {row.seats.map((seat) => (
-                        <SeatButton
-                          key={seat.id}
-                          seat={seat}
-                          selected={selected.includes(seat.id)}
-                          onClick={() => toggleSeat(seat)}
-                        />
+        <p className="mt-6 text-xs leading-5 text-muted sm:hidden">
+          Swipe the auditorium map sideways to choose a seat.
+        </p>
+        <div className="relative mt-4 overflow-x-auto overscroll-x-contain pb-4 [scrollbar-width:thin] sm:mt-8">
+          <div className="relative min-w-[720px] px-7 pb-5 pt-3 sm:min-w-[820px] sm:px-12">
+            <div className="relative mx-auto max-w-[780px]">
+              <div className="h-3 rounded-t-[100%] bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 shadow-[0_5px_22px_rgba(249,115,22,0.35)]" />
+              <p className="absolute inset-x-0 -top-0.5 text-center text-[10px] font-bold tracking-[0.16em] text-slate-950">
+                SCREEN
+              </p>
+            </div>
+            <div className="pointer-events-none absolute bottom-5 left-2 top-20 w-3 border-x border-border/70 bg-surface-muted/70" />
+            <div className="pointer-events-none absolute bottom-5 right-2 top-20 w-3 border-x border-border/70 bg-surface-muted/70" />
+            <div className="relative mt-12 space-y-8 px-5 sm:px-10">
+              {data.layout.categories.map((category) => {
+                const rows = data.layout.rows.filter((row) =>
+                  row.seats.some((seat) => seat.category === category),
+                );
+                if (!rows.length) return null;
+                const price = priceLookup.get(category);
+                return (
+                  <section key={category} aria-label={`${category} seats`}>
+                    <div className="mb-3 flex items-center gap-3">
+                      <span className="h-px flex-1 bg-border/70" />
+                      <h2 className="rounded-full border border-border bg-background px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-muted">
+                        {category}
+                        {price !== undefined ? ` · ₹${price}` : ""}
+                      </h2>
+                      <span className="h-px flex-1 bg-border/70" />
+                    </div>
+                    <div className="grid gap-2.5">
+                      {rows.map((row) => (
+                        <div
+                          key={row.label}
+                          className="grid grid-cols-[28px_minmax(0,1fr)_28px] items-center gap-2"
+                        >
+                          <span className="text-center text-xs font-bold text-muted">
+                            {row.label}
+                          </span>
+                          <div className="grid grid-flow-col auto-cols-max justify-center gap-x-8 sm:gap-x-14">
+                            {splitSeatBlocks(row.seats).map((block, index) => (
+                              <div
+                                key={`${row.label}-${index}`}
+                                className="flex gap-1.5"
+                              >
+                                {block.map((seat) => (
+                                  <SeatButton
+                                    key={seat.id}
+                                    seat={seat}
+                                    selected={selected.includes(seat.id)}
+                                    onClick={() => toggleSeat(seat)}
+                                  />
+                                ))}
+                              </div>
+                            ))}
+                          </div>
+                          <span className="text-center text-xs font-bold text-muted">
+                            {row.label}
+                          </span>
+                        </div>
                       ))}
                     </div>
-                  ))}
-                </div>
-              </section>
-            );
-          })}
+                  </section>
+                );
+              })}
+            </div>
+          </div>
         </div>
-        <div className="mx-auto mt-10 h-2 w-4/5 rounded-full bg-secondary/70 shadow-[0_0_20px_rgba(6,182,212,0.38)]" />
-        <p className="mt-2 text-center text-xs font-semibold tracking-[0.18em] text-muted">
-          SCREEN
-        </p>
       </section>
 
       <aside className="lg:sticky lg:top-20 lg:self-start">
@@ -476,7 +513,7 @@ export function SeatPicker({
                   type="button"
                   onClick={() => void releaseSeats()}
                   disabled={releasing}
-                  className="inline-flex h-10 w-full items-center justify-center rounded-md border border-border px-4 text-sm font-semibold text-muted transition-colors hover:bg-surface-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-45"
+                  className="inline-flex h-11 w-full items-center justify-center rounded-md border border-border px-4 text-sm font-semibold text-muted transition-colors hover:bg-surface-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-45"
                 >
                   {releasing ? "Releasing seats..." : "Release seats"}
                 </button>
@@ -486,7 +523,7 @@ export function SeatPicker({
                 type="button"
                 onClick={() => void lockSeats()}
                 disabled={!selectedSeats.length || locking}
-                className="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-accent px-4 text-sm font-semibold text-accent-foreground transition-colors hover:bg-warning disabled:cursor-not-allowed disabled:opacity-45"
+                className="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-cta px-4 text-sm font-semibold text-cta-foreground transition-colors hover:bg-cta-hover disabled:cursor-not-allowed disabled:opacity-45"
               >
                 <Ticket className="size-4" aria-hidden="true" />
                 {locking ? "Locking seats..." : "Continue"}
@@ -515,7 +552,7 @@ function SeatButton({
   if (seat.status !== "AVAILABLE")
     return (
       <span
-        className={`grid h-9 min-w-8 place-items-center rounded-sm border text-[11px] font-semibold ${statusClasses[state]}`}
+        className={`grid size-11 place-items-center rounded-[5px_5px_3px_3px] border text-[10px] font-bold sm:size-10 ${statusClasses[state]}`}
         title={statusLabels[state]}
       >
         {String(seat.number).padStart(2, "0")}
@@ -526,7 +563,7 @@ function SeatButton({
       type="button"
       aria-label={`${seat.id}, ${statusLabels[state]}`}
       aria-pressed={selected}
-      className={`grid h-9 min-w-8 place-items-center rounded-sm border text-[11px] font-semibold ${statusClasses[state]}`}
+      className={`grid size-11 place-items-center rounded-[5px_5px_3px_3px] border text-[10px] font-bold sm:size-10 ${statusClasses[state]}`}
       title={statusLabels[state]}
       animate={{ scale: selected ? 1.06 : 1, y: selected ? -1 : 0 }}
       {...props}

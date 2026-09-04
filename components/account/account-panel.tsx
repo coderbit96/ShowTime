@@ -7,17 +7,20 @@ import {
   Gift,
   Heart,
   LoaderCircle,
+  LogOut,
   Ticket,
   WalletCards,
   XCircle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   EmailAuthProvider,
   reauthenticateWithCredential,
   updatePassword,
 } from "firebase/auth";
 import { firebaseAuth } from "@/lib/firebase/client";
+import { WalletRecharge } from "./wallet-recharge";
 
 type Profile = { name: string; email: string; phone?: string; avatar?: string };
 type Booking = {
@@ -46,6 +49,8 @@ type WalletState = {
     source: string;
     amount: number;
     points: number;
+    balanceAfter: number;
+    note?: string;
     createdAt: string;
   }>;
 };
@@ -97,6 +102,8 @@ async function authorizedFetch(path: string, options: RequestInit = {}) {
 }
 
 export function AccountPanel() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [favorites, setFavorites] = useState<unknown[]>([]);
@@ -107,9 +114,16 @@ export function AccountPanel() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [changingPassword, setChangingPassword] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const [reviewDrafts, setReviewDrafts] = useState<
     Record<string, { rating: string; comment: string }>
   >({});
+  const activeTab = ["profile", "wallet", "settings", "bookings"].includes(
+    searchParams.get("tab") ?? "",
+  )
+    ? (searchParams.get("tab") as
+        "profile" | "wallet" | "settings" | "bookings")
+    : "profile";
 
   const load = async () => {
     setLoading(true);
@@ -342,6 +356,25 @@ export function AccountPanel() {
     }
   };
 
+  const signOut = async () => {
+    setSigningOut(true);
+    setMessage("");
+    sessionStorage.setItem("show-time-post-logout", "true");
+
+    try {
+      await firebaseAuth.signOut();
+      router.replace("/");
+    } catch (error) {
+      sessionStorage.removeItem("show-time-post-logout");
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Unable to sign out. Please try again.",
+      );
+      setSigningOut(false);
+    }
+  };
+
   if (loading)
     return (
       <div className="grid min-h-80 place-items-center">
@@ -378,6 +411,38 @@ export function AccountPanel() {
           <Gift className="size-4 text-warning" />{" "}
           {wallet?.wallet?.rewardPoints ?? 0} points
         </div>
+        <nav
+          className="mt-6 grid gap-1 border-t border-border pt-4"
+          aria-label="Account sections"
+        >
+          {[
+            ["profile", "Profile"],
+            ["wallet", "My wallet"],
+            ["settings", "Settings"],
+            ["bookings", "Booking history"],
+          ].map(([tab, label]) => (
+            <Link
+              href={`/account?tab=${tab}`}
+              key={tab}
+              className={`flex h-10 items-center rounded-lg px-3 text-sm font-semibold transition-colors ${
+                activeTab === tab
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted hover:bg-surface-muted hover:text-foreground"
+              }`}
+            >
+              {label}
+            </Link>
+          ))}
+        </nav>
+        <button
+          type="button"
+          onClick={() => void signOut()}
+          disabled={signingOut}
+          className="mt-6 inline-flex h-10 w-full items-center justify-center gap-2 rounded-md border border-accent/50 px-4 text-sm font-semibold text-accent transition-colors hover:border-accent hover:bg-accent hover:text-accent-foreground disabled:cursor-wait disabled:opacity-55"
+        >
+          <LogOut className="size-4" aria-hidden="true" />
+          {signingOut ? "Signing out..." : "Log out"}
+        </button>
       </aside>
       <div className="space-y-8">
         {message ? (
@@ -385,7 +450,7 @@ export function AccountPanel() {
             {message}
           </p>
         ) : null}
-        <section>
+        <section className={activeTab === "profile" ? "" : "hidden"}>
           <h2 className="text-lg font-semibold">Profile</h2>
           <form
             onSubmit={saveProfile}
@@ -426,7 +491,7 @@ export function AccountPanel() {
             </button>
           </form>
         </section>
-        <section>
+        <section className={activeTab === "settings" ? "" : "hidden"}>
           <h2 className="text-lg font-semibold">Password & security</h2>
           <p className="mt-1 text-sm text-muted">
             Confirm your current password before choosing a new one.
@@ -475,102 +540,166 @@ export function AccountPanel() {
             </button>
           </form>
         </section>
-        <section className="grid gap-4 lg:grid-cols-3">
-          <div className="rounded-md border border-border bg-surface p-4">
-            <p className="flex items-center gap-2 text-sm font-semibold">
-              <WalletCards className="size-4 text-secondary" /> Wallet
-            </p>
-            <p className="mt-3 text-2xl font-semibold">
-              INR {wallet?.wallet?.balance ?? 0}
-            </p>
+        <section className={activeTab === "wallet" ? "" : "hidden"}>
+          <div>
+            <h2 className="text-lg font-semibold">My wallet</h2>
             <p className="mt-1 text-sm text-muted">
-              {wallet?.wallet?.rewardPoints ?? 0} reward points
+              Manage your balance, rewards, payment activity, and passes.
             </p>
-            <button
-              type="button"
-              onClick={() => void redeemPoints()}
-              className="mt-4 h-9 rounded-md border border-border px-3 text-xs font-semibold text-muted hover:bg-surface-muted"
-            >
-              Redeem 100 points
-            </button>
           </div>
-          <div className="rounded-md border border-border bg-surface p-4">
-            <p className="flex items-center gap-2 text-sm font-semibold">
-              <Gift className="size-4 text-warning" /> Referrals
-            </p>
-            <p className="mt-3 font-mono text-lg font-semibold">
-              {referral?.referral?.code ?? "Loading"}
-            </p>
-            <p className="mt-1 text-xs text-muted">
-              Share your code. Rewards land in wallet points after redemption.
-            </p>
-            <form onSubmit={redeemReferral} className="mt-4 flex gap-2">
-              <input
-                name="code"
-                placeholder="Enter code"
-                className="h-9 min-w-0 flex-1 rounded-md border border-border bg-background px-3 text-xs uppercase"
-              />
-              <button className="h-9 rounded-md border border-border px-3 text-xs font-semibold text-muted">
-                Redeem
+          <div className="mt-4 grid gap-4 lg:grid-cols-3">
+            <div className="rounded-md border border-border bg-surface p-4">
+              <p className="flex items-center gap-2 text-sm font-semibold">
+                <WalletCards className="size-4 text-secondary" /> Wallet
+              </p>
+              <p className="mt-3 text-2xl font-semibold">
+                INR {wallet?.wallet?.balance ?? 0}
+              </p>
+              <p className="mt-1 text-sm text-muted">
+                {wallet?.wallet?.rewardPoints ?? 0} reward points
+              </p>
+              <button
+                type="button"
+                onClick={() => void redeemPoints()}
+                className="mt-4 h-9 rounded-md border border-border px-3 text-xs font-semibold text-muted hover:bg-surface-muted"
+              >
+                Redeem 100 points
               </button>
-            </form>
-          </div>
-          <div className="rounded-md border border-border bg-surface p-4">
-            <p className="flex items-center gap-2 text-sm font-semibold">
-              <BadgePercent className="size-4 text-accent" /> Membership
-            </p>
-            <p className="mt-3 text-sm font-semibold">
-              {memberships?.activeSubscription?.plan?.name ?? "No active plan"}
-            </p>
-            <p className="mt-1 text-xs text-muted">
-              {memberships?.activeSubscription
-                ? `Valid until ${new Date(
-                    memberships.activeSubscription.endsAt,
-                  ).toLocaleDateString("en-IN")}`
-                : "Subscribe with wallet balance."}
-            </p>
-            <div className="mt-4 grid gap-2">
-              {(memberships?.plans ?? []).slice(0, 2).map((plan) => (
-                <button
-                  key={plan._id}
-                  type="button"
-                  onClick={() => void subscribe(plan._id)}
-                  className="flex min-h-10 items-center justify-between rounded-md border border-border px-3 text-left text-xs hover:bg-surface-muted"
-                >
-                  <span>{plan.name}</span>
-                  <span>INR {plan.price}</span>
+            </div>
+            <div className="rounded-md border border-border bg-surface p-4">
+              <p className="flex items-center gap-2 text-sm font-semibold">
+                <Gift className="size-4 text-warning" /> Referrals
+              </p>
+              <p className="mt-3 font-mono text-lg font-semibold">
+                {referral?.referral?.code ?? "Loading"}
+              </p>
+              <p className="mt-1 text-xs text-muted">
+                Share your code. Rewards land in wallet points after redemption.
+              </p>
+              <form onSubmit={redeemReferral} className="mt-4 flex gap-2">
+                <input
+                  name="code"
+                  placeholder="Enter code"
+                  className="h-9 min-w-0 flex-1 rounded-md border border-border bg-background px-3 text-xs uppercase"
+                />
+                <button className="h-9 rounded-md border border-border px-3 text-xs font-semibold text-muted">
+                  Redeem
                 </button>
-              ))}
+              </form>
+            </div>
+            <div className="rounded-md border border-border bg-surface p-4">
+              <p className="flex items-center gap-2 text-sm font-semibold">
+                <BadgePercent className="size-4 text-accent" /> Membership
+              </p>
+              <p className="mt-3 text-sm font-semibold">
+                {memberships?.activeSubscription?.plan?.name ??
+                  "No active plan"}
+              </p>
+              <p className="mt-1 text-xs text-muted">
+                {memberships?.activeSubscription
+                  ? `Valid until ${new Date(
+                      memberships.activeSubscription.endsAt,
+                    ).toLocaleDateString("en-IN")}`
+                  : "Subscribe with wallet balance."}
+              </p>
+              <div className="mt-4 grid gap-2">
+                {(memberships?.plans ?? []).slice(0, 2).map((plan) => (
+                  <button
+                    key={plan._id}
+                    type="button"
+                    onClick={() => void subscribe(plan._id)}
+                    className="flex min-h-10 items-center justify-between rounded-md border border-border px-3 text-left text-xs hover:bg-surface-muted"
+                  >
+                    <span>{plan.name}</span>
+                    <span>INR {plan.price}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-        </section>
-        <section>
-          <h2 className="text-lg font-semibold">Wallet passes</h2>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {passes.length ? (
-              passes.map((pass) => (
-                <article
-                  key={pass._id}
-                  className="rounded-md border border-border bg-surface p-4"
-                >
-                  <p className="font-semibold">{pass.title}</p>
-                  <p className="mt-1 font-mono text-xs text-secondary">
-                    {pass.passId}
-                  </p>
-                  <p className="mt-2 text-xs text-muted">
-                    {pass.status} - expires{" "}
-                    {new Date(pass.expiresAt).toLocaleDateString("en-IN")}
-                  </p>
-                </article>
-              ))
-            ) : (
-              <p className="rounded-md border border-dashed border-border p-5 text-sm text-muted sm:col-span-2">
-                No wallet passes yet.
-              </p>
-            )}
+          <div className="mt-4">
+            <WalletRecharge onRefresh={load} />
           </div>
+          <div className="mt-8">
+            <h2 className="text-lg font-semibold">Wallet passes</h2>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {passes.length ? (
+                passes.map((pass) => (
+                  <article
+                    key={pass._id}
+                    className="rounded-md border border-border bg-surface p-4"
+                  >
+                    <p className="font-semibold">{pass.title}</p>
+                    <p className="mt-1 font-mono text-xs text-secondary">
+                      {pass.passId}
+                    </p>
+                    <p className="mt-2 text-xs text-muted">
+                      {pass.status} - expires{" "}
+                      {new Date(pass.expiresAt).toLocaleDateString("en-IN")}
+                    </p>
+                  </article>
+                ))
+              ) : (
+                <p className="rounded-md border border-dashed border-border p-5 text-sm text-muted sm:col-span-2">
+                  No wallet passes yet.
+                </p>
+              )}
+            </div>
+          </div>
+          <section className="mt-8">
+            <h2 className="text-lg font-semibold">Payment activity</h2>
+            <div className="mt-4 overflow-hidden rounded-md border border-border">
+              {wallet?.transactions?.length ? (
+                <div className="divide-y divide-border">
+                  {wallet.transactions.map((transaction) => {
+                    const isCredit = [
+                      "CREDIT",
+                      "REWARD_EARN",
+                      "REFUND",
+                    ].includes(transaction.type);
+                    return (
+                      <div
+                        key={transaction._id}
+                        className="grid gap-1 px-4 py-3 text-sm sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center sm:gap-4"
+                      >
+                        <div>
+                          <p className="font-medium text-foreground">
+                            {transaction.note ??
+                              transaction.source.replaceAll("_", " ")}
+                          </p>
+                          <p className="mt-0.5 text-xs text-muted">
+                            {new Date(transaction.createdAt).toLocaleString(
+                              "en-IN",
+                            )}
+                          </p>
+                        </div>
+                        <p className="text-xs font-semibold text-muted">
+                          Balance: INR{" "}
+                          {transaction.balanceAfter.toLocaleString("en-IN")}
+                        </p>
+                        <p
+                          className={
+                            isCredit
+                              ? "font-semibold text-success"
+                              : "font-semibold text-accent"
+                          }
+                        >
+                          {isCredit ? "+" : "-"} INR{" "}
+                          {transaction.amount.toLocaleString("en-IN")}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="px-4 py-5 text-sm text-muted">
+                  Your payments and wallet activity will appear here.
+                </p>
+              )}
+            </div>
+          </section>
         </section>
-        <section>
+        <section className={activeTab === "bookings" ? "" : "hidden"}>
           <h2 className="text-lg font-semibold">Booking history</h2>
           <div className="mt-4 grid gap-3">
             {!bookings.length ? (

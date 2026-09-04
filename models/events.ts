@@ -13,7 +13,14 @@ const ArtistSchema = new Schema(
 const EventSchema = new Schema(
   {
     title: { type: String, required: true, trim: true },
-    slug: { type: String, required: true, trim: true, lowercase: true },
+    slug: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+      immutable: true,
+      match: /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+    },
     description: { type: String, required: true, trim: true },
     termsAndConditions: { type: String, trim: true, maxlength: 8000 },
     poster: { type: String, required: true, trim: true },

@@ -1,10 +1,11 @@
-import type { Metadata } from "next";
 import { InfoPage } from "@/components/site/info-page";
+import { pageMetadata } from "@/lib/seo/site";
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: "Press | Show Time",
   description: "Press information for Show Time.",
-};
+  path: "/press",
+});
 
 export default function PressPage() {
   return (

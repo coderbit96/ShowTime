@@ -8,7 +8,22 @@ import { Menu, Search, Ticket, UserRound, X } from "lucide-react";
 import { GlobalSearch } from "@/components/search";
 import { firebaseAuth } from "@/lib/firebase/client";
 import { CitySelector } from "./city-selector";
+import { CustomerAccountMenu } from "./customer-account-menu";
 import { NotificationMenu } from "./notification-menu";
+
+type AccountRole = "CUSTOMER" | "ORGANIZER" | "ADMIN";
+
+const accountDestination: Record<AccountRole, string> = {
+  CUSTOMER: "/account",
+  ORGANIZER: "/organizer/dashboard",
+  ADMIN: "/admin/dashboard",
+};
+
+const accountLabel: Record<AccountRole, string> = {
+  CUSTOMER: "My account",
+  ORGANIZER: "Organizer dashboard",
+  ADMIN: "Admin dashboard",
+};
 
 const navLinks = [
   { label: "Movies", href: "/#recommended-movies" },
@@ -22,10 +37,47 @@ const navLinks = [
 export function SiteHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [authUser, setAuthUser] = useState<User | null>(null);
+  const [accountRole, setAccountRole] = useState<AccountRole | null>(null);
 
   useEffect(() => {
-    return onAuthStateChanged(firebaseAuth, (user) => setAuthUser(user));
+    let active = true;
+    const unsubscribe = onAuthStateChanged(firebaseAuth, (user) => {
+      setAuthUser(user);
+      setAccountRole(null);
+      if (!user) return;
+      void user
+        .getIdToken()
+        .then((token) =>
+          fetch("/api/auth/session", {
+            headers: { Authorization: `Bearer ${token}` },
+            cache: "no-store",
+          }),
+        )
+        .then(async (response) => {
+          if (!response.ok) return null;
+          return (await response.json()) as {
+            user?: { role?: AccountRole };
+          };
+        })
+        .then((payload) => {
+          if (active && payload?.user?.role) setAccountRole(payload.user.role);
+        })
+        .catch(() => undefined);
+    });
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   }, []);
+
+  const accountHref = accountRole
+    ? accountDestination[accountRole]
+    : "/account";
+  const resolvedAccountLabel = accountRole
+    ? accountLabel[accountRole]
+    : authUser
+      ? "My account"
+      : "Account";
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-background/78 shadow-[0_10px_38px_rgba(0,0,0,0.28)] backdrop-blur-xl">
@@ -63,13 +115,17 @@ export function SiteHeader() {
         <div className="hidden items-center gap-2 md:flex">
           <CitySelector />
           <NotificationMenu />
-          <Link
-            href="/account"
-            className="premium-button h-10 gap-2 px-3 text-sm font-semibold"
-          >
-            <UserRound className="size-4" aria-hidden="true" />
-            <span>{authUser ? "My account" : "Account"}</span>
-          </Link>
+          {authUser && accountRole === "CUSTOMER" ? (
+            <CustomerAccountMenu />
+          ) : (
+            <Link
+              href={accountHref}
+              className="premium-button h-10 gap-2 px-3 text-sm font-semibold"
+            >
+              <UserRound className="size-4" aria-hidden="true" />
+              <span>{resolvedAccountLabel}</span>
+            </Link>
+          )}
         </div>
 
         <button
@@ -115,14 +171,19 @@ export function SiteHeader() {
               ))}
             </div>
 
-            {authUser ? (
+            {authUser && accountRole === "CUSTOMER" ? (
+              <CustomerAccountMenu
+                compact
+                onNavigate={() => setMobileOpen(false)}
+              />
+            ) : authUser ? (
               <Link
-                href="/account"
+                href={accountHref}
                 className="premium-button h-10 gap-2 px-3 text-sm font-semibold"
                 onClick={() => setMobileOpen(false)}
               >
                 <UserRound className="size-4" aria-hidden="true" />
-                My account
+                {resolvedAccountLabel}
               </Link>
             ) : (
               <div className="grid grid-cols-2 gap-2">

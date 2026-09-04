@@ -1,12 +1,20 @@
 import { AccountPanel } from "@/components/account/account-panel";
-import { AuthRequired } from "@/components/auth/auth-required";
+import { CustomerAccountGate } from "@/components/auth/customer-account-gate";
+import { pageMetadata } from "@/lib/seo/site";
+
+export const metadata = pageMetadata({
+  title: "Your account | Show Time",
+  description: "Manage your Show Time account and bookings.",
+  path: "/account",
+  index: false,
+});
 
 export default function AccountPage() {
   return (
     <main className="mx-auto min-h-screen max-w-7xl px-5 py-8">
-      <AuthRequired>
+      <CustomerAccountGate>
         <AccountPanel />
-      </AuthRequired>
+      </CustomerAccountGate>
     </main>
   );
 }

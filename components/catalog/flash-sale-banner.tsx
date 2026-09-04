@@ -35,10 +35,10 @@ export function FlashSaleBanner({
   if (!flashSale || remainingSeconds <= 0) return null;
 
   return (
-    <section className="border-y border-accent/35 bg-[linear-gradient(90deg,rgba(244,63,94,0.18),rgba(124,58,237,0.12),rgba(6,182,212,0.12))]">
+    <section className="border-y border-secondary/35 bg-[linear-gradient(90deg,rgba(124,58,237,0.2),rgba(168,85,247,0.14),rgba(6,182,212,0.12))]">
       <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-4 text-sm sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="grid size-10 shrink-0 place-items-center rounded-md bg-accent text-accent-foreground shadow-[0_0_24px_rgba(244,63,94,0.4)]">
+          <span className="grid size-10 shrink-0 place-items-center rounded-md bg-gradient-accent text-cta-foreground shadow-[0_0_24px_rgba(168,85,247,0.4)]">
             <TicketPercent className="size-5" aria-hidden="true" />
           </span>
           <div className="min-w-0">

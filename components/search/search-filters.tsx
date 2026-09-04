@@ -5,7 +5,7 @@ import { Filter, RotateCcw } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { DateScope } from "@/lib/search";
 
-const cities = ["Mumbai", "Delhi", "Bengaluru", "Kolkata", "Pune"];
+const cities = ["Kolkata", "Mumbai", "Delhi", "Bengaluru", "Pune"];
 const categories = [
   "Movie",
   "Live Event",
