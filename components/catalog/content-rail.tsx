@@ -55,7 +55,7 @@ export function ContentRail({ children }: ContentRailProps) {
       >
         {children}
       </div>
-      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 hidden items-center bg-gradient-to-r from-background via-background/82 to-transparent pl-2 pr-12 lg:flex">
+      <div className="pointer-events-none absolute inset-y-0 -left-14 z-10 hidden items-center bg-gradient-to-r from-background via-background/82 to-transparent pl-2 pr-12 lg:flex">
         <button
           type="button"
           onClick={() => move(-1)}
@@ -67,7 +67,7 @@ export function ContentRail({ children }: ContentRailProps) {
           <ChevronLeft className="size-4" aria-hidden="true" />
         </button>
       </div>
-      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 hidden items-center bg-gradient-to-l from-background via-background/82 to-transparent pl-12 pr-2 lg:flex">
+      <div className="pointer-events-none absolute inset-y-0 -right-14 z-10 hidden items-center bg-gradient-to-l from-background via-background/82 to-transparent pl-12 pr-2 lg:flex">
         <button
           type="button"
           onClick={() => move(1)}

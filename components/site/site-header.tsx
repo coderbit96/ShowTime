@@ -7,11 +7,13 @@ import { onAuthStateChanged, type User } from "firebase/auth";
 import { Menu, Search, Ticket, UserRound, X } from "lucide-react";
 import { GlobalSearch } from "@/components/search";
 import { firebaseAuth } from "@/lib/firebase/client";
+import {
+  fetchAccountSession,
+  type AccountRole,
+} from "@/lib/firebase/session-client";
 import { CitySelector } from "./city-selector";
 import { CustomerAccountMenu } from "./customer-account-menu";
 import { NotificationMenu } from "./notification-menu";
-
-type AccountRole = "CUSTOMER" | "ORGANIZER" | "ADMIN";
 
 const accountDestination: Record<AccountRole, string> = {
   CUSTOMER: "/account",
@@ -45,22 +47,10 @@ export function SiteHeader() {
       setAuthUser(user);
       setAccountRole(null);
       if (!user) return;
-      void user
-        .getIdToken()
-        .then((token) =>
-          fetch("/api/auth/session", {
-            headers: { Authorization: `Bearer ${token}` },
-            cache: "no-store",
-          }),
-        )
-        .then(async (response) => {
-          if (!response.ok) return null;
-          return (await response.json()) as {
-            user?: { role?: AccountRole };
-          };
-        })
-        .then((payload) => {
-          if (active && payload?.user?.role) setAccountRole(payload.user.role);
+      void fetchAccountSession(user)
+        .then(({ ok, payload }) => {
+          if (active && ok && payload.user?.role)
+            setAccountRole(payload.user.role);
         })
         .catch(() => undefined);
     });

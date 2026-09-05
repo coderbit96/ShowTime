@@ -1,7 +1,8 @@
 import type { ContentCard } from "@/lib/catalog";
 
 export type DateScope = "today" | "tomorrow" | "weekend" | "custom";
-export type PriceBucket = "under-299" | "300-599" | "600-999" | "1000-plus";
+export type PriceBucket =
+  "under-299" | "under-499" | "300-599" | "600-999" | "1000-plus";
 export type AvailabilityFilter = "available" | "sold-out";
 
 export type SearchFilters = {

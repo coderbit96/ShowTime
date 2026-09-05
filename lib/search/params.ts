@@ -14,6 +14,7 @@ const dateScopes = new Set<DateScope>([
 ]);
 const priceBuckets = new Set<PriceBucket>([
   "under-299",
+  "under-499",
   "300-599",
   "600-999",
   "1000-plus",

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { FirebaseAnalyticsProvider } from "@/components/providers/firebase-analytics";
+import { SmoothScrollProvider } from "@/components/providers/smooth-scroll-provider";
 import { absoluteUrl, siteUrl } from "@/lib/seo/site";
 import "./globals.css";
 
@@ -41,7 +42,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className={`${geistSans.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <FirebaseAnalyticsProvider />
-        {children}
+        <SmoothScrollProvider>{children}</SmoothScrollProvider>
       </body>
     </html>
   );

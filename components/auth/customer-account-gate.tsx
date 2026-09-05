@@ -6,31 +6,17 @@ import { onAuthStateChanged, type User } from "firebase/auth";
 import { LoaderCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { firebaseAuth } from "@/lib/firebase/client";
+import {
+  fetchAccountSession,
+  type AccountRole,
+} from "@/lib/firebase/session-client";
 
-type Role = "CUSTOMER" | "ORGANIZER" | "ADMIN";
 type GateState = "checking" | "allowed" | "redirecting" | "error";
 
-const dashboardByRole: Record<Exclude<Role, "CUSTOMER">, string> = {
+const dashboardByRole: Record<Exclude<AccountRole, "CUSTOMER">, string> = {
   ADMIN: "/admin/dashboard",
   ORGANIZER: "/organizer/dashboard",
 };
-
-async function readSessionResponse(response: Response) {
-  const body = await response.text();
-  if (!body.trim())
-    return {
-      error:
-        "The account service did not return a response. Please try again shortly.",
-    };
-  try {
-    return JSON.parse(body) as { user?: { role: Role }; error?: string };
-  } catch {
-    return {
-      error:
-        "The account service returned an invalid response. Please try again shortly.",
-    };
-  }
-}
 
 export function CustomerAccountGate({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -53,13 +39,8 @@ export function CustomerAccountGate({ children }: { children: ReactNode }) {
       }
 
       try {
-        const token = await user.getIdToken();
-        const response = await fetch("/api/auth/session", {
-          headers: { Authorization: `Bearer ${token}` },
-          cache: "no-store",
-        });
-        const payload = await readSessionResponse(response);
-        if (!response.ok || !payload.user)
+        const { ok, payload } = await fetchAccountSession(user);
+        if (!ok || !payload.user)
           throw new Error(payload.error ?? "Unable to verify your account.");
         if (!active) return;
 

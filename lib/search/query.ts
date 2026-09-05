@@ -52,6 +52,7 @@ const toSlug = (value: string) =>
 
 const priceClauses: Record<PriceBucket, MongoFilter> = {
   "under-299": { "pricing.price": { $lt: 300 } },
+  "under-499": { "pricing.price": { $lt: 500 } },
   "300-599": { "pricing.price": { $gte: 300, $lte: 599 } },
   "600-999": { "pricing.price": { $gte: 600, $lte: 999 } },
   "1000-plus": { "pricing.price": { $gte: 1000 } },
@@ -101,6 +102,7 @@ function priceMatches(price: number, buckets: PriceBucket[]) {
     buckets.length === 0 ||
     buckets.some((bucket) => {
       if (bucket === "under-299") return price < 300;
+      if (bucket === "under-499") return price < 500;
       if (bucket === "300-599") return price >= 300 && price <= 599;
       if (bucket === "600-999") return price >= 600 && price <= 999;
       return price >= 1000;

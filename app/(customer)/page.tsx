@@ -140,6 +140,7 @@ export default async function CustomerHomePage() {
           <BrowseSection
             id="trending"
             title="Trending Near You"
+            href="/search"
             description={
               "Plans people in " + catalog.city + " are saving right now."
             }
@@ -154,6 +155,7 @@ export default async function CustomerHomePage() {
           <BrowseSection
             id="recommended-movies"
             title="Recommended Movies"
+            href="/search?eventType=MOVIE"
             description="Big-screen stories, thoughtfully picked."
           >
             <ContentRail>
@@ -168,6 +170,7 @@ export default async function CustomerHomePage() {
           <BrowseSection
             id="live-events"
             title="Live Events"
+            href="/search?category=Live%20Event"
             description="Workshops, city drops, and things to do this week."
           >
             <ContentRail>
@@ -180,6 +183,7 @@ export default async function CustomerHomePage() {
           <BrowseSection
             id="concerts"
             title="Concerts"
+            href="/search?eventType=CONCERT"
             description="Volume up, phone down."
           >
             <ContentRail>
@@ -192,6 +196,7 @@ export default async function CustomerHomePage() {
           <BrowseSection
             id="comedy"
             title="Comedy Shows"
+            href="/search?eventType=COMEDY"
             description="A very good reason to leave the group chat."
           >
             <ContentRail>
@@ -204,6 +209,7 @@ export default async function CustomerHomePage() {
           <BrowseSection
             id="sports"
             title="Sports"
+            href="/search?eventType=SPORT"
             description="Feel the crowd, not just the score."
           >
             <ContentRail>
@@ -219,6 +225,7 @@ export default async function CustomerHomePage() {
             <BrowseSection
               id="weekend-experiences"
               title="Weekend Experiences"
+              href="/search?date=weekend"
               description="Trade another scroll for a story you can actually tell."
             >
               <ContentRail>
@@ -234,6 +241,7 @@ export default async function CustomerHomePage() {
           <BrowseSection
             id="under-499"
             title={"Events Under " + "\u20b9" + "499"}
+            href="/search?price=under-499"
             description="Low lift, high return."
           >
             <ContentRail>
@@ -246,6 +254,7 @@ export default async function CustomerHomePage() {
           <BrowseSection
             id="popular-venues"
             title="Popular Venues"
+            href="/search"
             description="A few places worth knowing."
           >
             <ContentRail>

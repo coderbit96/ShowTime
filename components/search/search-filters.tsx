@@ -28,6 +28,7 @@ const languages = ["Hindi", "English", "Tamil", "Telugu", "Bengali"];
 const genres = ["Drama", "Comedy", "Romance", "Music", "Adventure", "Sci-fi"];
 const priceBuckets = [
   ["under-299", "Under Rs. 299"],
+  ["under-499", "Under Rs. 499"],
   ["300-599", "Rs. 300-599"],
   ["600-999", "Rs. 600-999"],
   ["1000-plus", "Rs. 1000+"],
