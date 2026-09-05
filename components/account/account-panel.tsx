@@ -3,6 +3,7 @@
 import Link from "next/link";
 import {
   BadgePercent,
+  Eye,
   EyeOff,
   Gift,
   Heart,
@@ -22,7 +23,30 @@ import {
 import { firebaseAuth } from "@/lib/firebase/client";
 import { WalletRecharge } from "./wallet-recharge";
 
-type Profile = { name: string; email: string; phone?: string; avatar?: string };
+type Profile = {
+  name: string;
+  email: string;
+  phone?: string;
+  dateOfBirth?: string;
+  gender?: "FEMALE" | "MALE" | "NON_BINARY" | "PREFER_NOT_TO_SAY";
+  address?: {
+    line1?: string;
+    line2?: string;
+    locality?: string;
+    state?: string;
+    postalCode?: string;
+    country?: string;
+  };
+};
+
+const emptyAddress = {
+  line1: "",
+  line2: "",
+  locality: "",
+  state: "",
+  postalCode: "",
+  country: "India",
+};
 type Booking = {
   id: string;
   status: string;
@@ -128,6 +152,9 @@ export function AccountPanel() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [changingPassword, setChangingPassword] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [reviewDrafts, setReviewDrafts] = useState<
     Record<string, { rating: string; comment: string }>
@@ -189,7 +216,9 @@ export function AccountPanel() {
         body: JSON.stringify({
           name: profile.name,
           phone: profile.phone ?? "",
-          avatar: profile.avatar ?? "",
+          dateOfBirth: profile.dateOfBirth?.slice(0, 10) ?? "",
+          gender: profile.gender ?? "",
+          address: { ...emptyAddress, ...profile.address },
         }),
       });
       setProfile(result.profile as Profile);
@@ -465,14 +494,20 @@ export function AccountPanel() {
           </p>
         ) : null}
         <section className={activeTab === "profile" ? "" : "hidden"}>
-          <h2 className="text-lg font-semibold">Profile</h2>
+          <div>
+            <h2 className="text-lg font-semibold">Personal details</h2>
+            <p className="mt-1 text-sm text-muted">
+              Keep your contact and billing details up to date for faster bookings.
+            </p>
+          </div>
           <form
             onSubmit={saveProfile}
-            className="mt-4 grid gap-3 rounded-md border border-border bg-surface p-4 sm:grid-cols-2"
+            className="mt-4 grid gap-4 rounded-xl border border-border bg-surface p-5 sm:grid-cols-2"
           >
             <label className="grid gap-1 text-sm">
-              Name
+              Full name
               <input
+                required
                 value={profile.name}
                 onChange={(event) =>
                   setProfile({ ...profile, name: event.target.value })
@@ -481,8 +516,22 @@ export function AccountPanel() {
               />
             </label>
             <label className="grid gap-1 text-sm">
+              Email address
+              <input
+                value={profile.email}
+                readOnly
+                aria-readonly="true"
+                className="h-10 cursor-not-allowed rounded-md border border-border bg-surface-muted px-3 text-muted"
+              />
+              <span className="text-xs text-muted">
+                Your sign-in email is managed securely by your account provider.
+              </span>
+            </label>
+            <label className="grid gap-1 text-sm">
               Phone
               <input
+                type="tel"
+                autoComplete="tel"
                 value={profile.phone ?? ""}
                 onChange={(event) =>
                   setProfile({ ...profile, phone: event.target.value })
@@ -490,18 +539,153 @@ export function AccountPanel() {
                 className="h-10 rounded-md border border-border bg-background px-3"
               />
             </label>
-            <label className="grid gap-1 text-sm sm:col-span-2">
-              Avatar URL
+            <label className="grid gap-1 text-sm">
+              Date of birth
               <input
-                value={profile.avatar ?? ""}
+                type="date"
+                max={new Date().toISOString().slice(0, 10)}
+                value={profile.dateOfBirth?.slice(0, 10) ?? ""}
                 onChange={(event) =>
-                  setProfile({ ...profile, avatar: event.target.value })
+                  setProfile({ ...profile, dateOfBirth: event.target.value })
                 }
                 className="h-10 rounded-md border border-border bg-background px-3"
               />
             </label>
-            <button className="h-10 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground sm:w-fit">
-              Save profile
+            <label className="grid gap-1 text-sm">
+              Gender
+              <select
+                value={profile.gender ?? ""}
+                onChange={(event) =>
+                  setProfile({
+                    ...profile,
+                    gender: (event.target.value || undefined) as Profile["gender"],
+                  })
+                }
+                className="h-10 rounded-md border border-border bg-background px-3"
+              >
+                <option value="">Prefer not to say</option>
+                <option value="FEMALE">Female</option>
+                <option value="MALE">Male</option>
+                <option value="NON_BINARY">Non-binary</option>
+                <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
+              </select>
+            </label>
+            <div className="sm:col-span-2">
+              <p className="text-sm font-semibold">Address</p>
+              <p className="mt-1 text-xs text-muted">
+                Used only for account records and applicable invoices.
+              </p>
+            </div>
+            <label className="grid gap-1 text-sm sm:col-span-2">
+              Address line 1
+              <input
+                autoComplete="address-line1"
+                value={profile.address?.line1 ?? ""}
+                onChange={(event) =>
+                  setProfile({
+                    ...profile,
+                    address: {
+                      ...emptyAddress,
+                      ...profile.address,
+                      line1: event.target.value,
+                    },
+                  })
+                }
+                className="h-10 rounded-md border border-border bg-background px-3"
+              />
+            </label>
+            <label className="grid gap-1 text-sm sm:col-span-2">
+              Address line 2 <span className="text-muted">(optional)</span>
+              <input
+                autoComplete="address-line2"
+                value={profile.address?.line2 ?? ""}
+                onChange={(event) =>
+                  setProfile({
+                    ...profile,
+                    address: {
+                      ...emptyAddress,
+                      ...profile.address,
+                      line2: event.target.value,
+                    },
+                  })
+                }
+                className="h-10 rounded-md border border-border bg-background px-3"
+              />
+            </label>
+            <label className="grid gap-1 text-sm">
+              City / locality
+              <input
+                autoComplete="address-level2"
+                value={profile.address?.locality ?? ""}
+                onChange={(event) =>
+                  setProfile({
+                    ...profile,
+                    address: {
+                      ...emptyAddress,
+                      ...profile.address,
+                      locality: event.target.value,
+                    },
+                  })
+                }
+                className="h-10 rounded-md border border-border bg-background px-3"
+              />
+            </label>
+            <label className="grid gap-1 text-sm">
+              State
+              <input
+                autoComplete="address-level1"
+                value={profile.address?.state ?? ""}
+                onChange={(event) =>
+                  setProfile({
+                    ...profile,
+                    address: {
+                      ...emptyAddress,
+                      ...profile.address,
+                      state: event.target.value,
+                    },
+                  })
+                }
+                className="h-10 rounded-md border border-border bg-background px-3"
+              />
+            </label>
+            <label className="grid gap-1 text-sm">
+              PIN / postal code
+              <input
+                autoComplete="postal-code"
+                value={profile.address?.postalCode ?? ""}
+                onChange={(event) =>
+                  setProfile({
+                    ...profile,
+                    address: {
+                      ...emptyAddress,
+                      ...profile.address,
+                      postalCode: event.target.value,
+                    },
+                  })
+                }
+                className="h-10 rounded-md border border-border bg-background px-3"
+              />
+            </label>
+            <label className="grid gap-1 text-sm">
+              Country
+              <input
+                autoComplete="country-name"
+                value={profile.address?.country ?? "India"}
+                onChange={(event) =>
+                  setProfile({
+                    ...profile,
+                    address: {
+                      ...emptyAddress,
+                      ...profile.address,
+                      country: event.target.value,
+                    },
+                  })
+                }
+                className="h-10 rounded-md border border-border bg-background px-3"
+              />
+            </label>
+            <button className="premium-button h-10 px-4 text-sm font-semibold sm:col-span-2 sm:w-fit">
+              Save personal details
             </button>
           </form>
         </section>
@@ -516,35 +700,86 @@ export function AccountPanel() {
           >
             <label className="grid gap-1 text-sm sm:col-span-2">
               Current password
-              <input
-                name="currentPassword"
-                required
-                type="password"
-                autoComplete="current-password"
-                className="h-10 rounded-md border border-border bg-background px-3"
-              />
+              <span className="relative">
+                <input
+                  name="currentPassword"
+                  required
+                  type={showCurrentPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  className="h-10 w-full rounded-md border border-border bg-background px-3 pr-11"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrentPassword((current) => !current)}
+                  className="absolute right-1 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-md text-muted hover:bg-surface-muted hover:text-foreground"
+                  aria-label={
+                    showCurrentPassword ? "Hide current password" : "Show current password"
+                  }
+                  aria-pressed={showCurrentPassword}
+                >
+                  {showCurrentPassword ? (
+                    <EyeOff className="size-4" aria-hidden="true" />
+                  ) : (
+                    <Eye className="size-4" aria-hidden="true" />
+                  )}
+                </button>
+              </span>
             </label>
             <label className="grid gap-1 text-sm">
               New password
-              <input
-                name="newPassword"
-                required
-                type="password"
-                minLength={6}
-                autoComplete="new-password"
-                className="h-10 rounded-md border border-border bg-background px-3"
-              />
+              <span className="relative">
+                <input
+                  name="newPassword"
+                  required
+                  type={showNewPassword ? "text" : "password"}
+                  minLength={6}
+                  autoComplete="new-password"
+                  className="h-10 w-full rounded-md border border-border bg-background px-3 pr-11"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword((current) => !current)}
+                  className="absolute right-1 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-md text-muted hover:bg-surface-muted hover:text-foreground"
+                  aria-label={showNewPassword ? "Hide new password" : "Show new password"}
+                  aria-pressed={showNewPassword}
+                >
+                  {showNewPassword ? (
+                    <EyeOff className="size-4" aria-hidden="true" />
+                  ) : (
+                    <Eye className="size-4" aria-hidden="true" />
+                  )}
+                </button>
+              </span>
             </label>
             <label className="grid gap-1 text-sm">
               Confirm new password
-              <input
-                name="confirmPassword"
-                required
-                type="password"
-                minLength={6}
-                autoComplete="new-password"
-                className="h-10 rounded-md border border-border bg-background px-3"
-              />
+              <span className="relative">
+                <input
+                  name="confirmPassword"
+                  required
+                  type={showConfirmPassword ? "text" : "password"}
+                  minLength={6}
+                  autoComplete="new-password"
+                  className="h-10 w-full rounded-md border border-border bg-background px-3 pr-11"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword((current) => !current)}
+                  className="absolute right-1 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-md text-muted hover:bg-surface-muted hover:text-foreground"
+                  aria-label={
+                    showConfirmPassword
+                      ? "Hide confirmed password"
+                      : "Show confirmed password"
+                  }
+                  aria-pressed={showConfirmPassword}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="size-4" aria-hidden="true" />
+                  ) : (
+                    <Eye className="size-4" aria-hidden="true" />
+                  )}
+                </button>
+              </span>
             </label>
             <button
               disabled={changingPassword}

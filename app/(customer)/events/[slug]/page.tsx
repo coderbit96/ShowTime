@@ -115,7 +115,7 @@ export default async function EventDetailPage({ params }: EventPageProps) {
         <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-background via-background/55 to-transparent" />
 
         <div className="relative mx-auto grid min-h-[500px] max-w-7xl gap-7 px-5 pb-12 pt-12 sm:px-6 md:grid-cols-[220px_minmax(0,1fr)] md:items-end md:pt-28 lg:grid-cols-[260px_minmax(0,1fr)]">
-          <div className="relative hidden aspect-[2/3] overflow-hidden rounded-md border border-primary-foreground/15 bg-surface shadow-2xl shadow-black/40 md:block">
+          <div className="relative hidden aspect-[2/3] overflow-hidden rounded-md border border-primary/20 bg-surface shadow-2xl shadow-slate-900/15 md:block">
             <Image
               src={event.poster}
               alt={`${event.title} poster`}
@@ -285,7 +285,7 @@ export default async function EventDetailPage({ params }: EventPageProps) {
 
         <aside className="lg:sticky lg:top-20 lg:self-start">
           <CardHover>
-            <section className="rounded-md border border-border bg-surface p-5 shadow-xl shadow-black/15">
+            <section className="rounded-md border border-border bg-surface p-5 shadow-xl shadow-slate-900/10">
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
                 Hosted by
               </p>

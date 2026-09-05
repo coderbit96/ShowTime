@@ -1,31 +1,32 @@
 @import "tailwindcss";
 
 :root {
-  --background: #070b14;
-  --foreground: #f8fafc;
-  --section: #0d1321;
-  --surface: #131c2e;
-  --surface-muted: #19243a;
-  --elevated: #19243a;
-  --border: #263449;
-  --primary: #06b6d4;
-  --primary-hover: #22d3ee;
-  --primary-foreground: #06232b;
-  --secondary: #7c3aed;
-  --secondary-text: #a78bfa;
-  --secondary-foreground: #f8fafc;
-  --gradient-accent: #a855f7;
-  --cta: #7c3aed;
-  --cta-hover: #8b5cf6;
-  --cta-foreground: #f8fafc;
-  --accent: #f43f5e;
-  --accent-foreground: #070b14;
-  --success: #22c55e;
-  --warning: #f59e0b;
-  --berry: #a855f7;
-  --mist: #19243a;
-  --muted: #94a3b8;
-  --ring: #22d3ee;
+  color-scheme: light;
+  --background: #f7f9fc;
+  --foreground: #122033;
+  --section: #eef3f8;
+  --surface: #ffffff;
+  --surface-muted: #eef3f8;
+  --elevated: #ffffff;
+  --border: #d6e1ec;
+  --primary: #0786a6;
+  --primary-hover: #066b85;
+  --primary-foreground: #ffffff;
+  --secondary: #6d28d9;
+  --secondary-text: #6d28d9;
+  --secondary-foreground: #ffffff;
+  --gradient-accent: #9333ea;
+  --cta: #6d28d9;
+  --cta-hover: #5b21b6;
+  --cta-foreground: #ffffff;
+  --accent: #d81b4a;
+  --accent-foreground: #ffffff;
+  --success: #15803d;
+  --warning: #b45309;
+  --berry: #9333ea;
+  --mist: #e8eff7;
+  --muted: #52647a;
+  --ring: #0786a6;
 }
 
 @theme inline {
@@ -59,16 +60,15 @@
 
 body {
   background:
-    linear-gradient(180deg, rgba(124, 58, 237, 0.12), transparent 420px),
-    linear-gradient(115deg, rgba(6, 182, 212, 0.09), transparent 48%),
+    radial-gradient(circle at 12% 0%, rgba(109, 40, 217, 0.1), transparent 30%),
+    radial-gradient(circle at 88% 10%, rgba(8, 145, 178, 0.1), transparent 28%),
     var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   text-rendering: optimizeLegibility;
 }
 
-/* #7C3AED remains the violet accent for fills and borders. Its lighter tint
-   preserves AA-readable text contrast against the midnight background. */
+/* Violet remains the brand accent while preserving readable contrast on white. */
 .text-secondary,
 .hover\:text-secondary:hover,
 .group:hover .group-hover\:text-secondary {
@@ -123,7 +123,7 @@ a:active {
 input,
 select,
 textarea {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 *:focus-visible {
@@ -150,32 +150,114 @@ textarea {
   background: var(--primary-hover);
 }
 
+@keyframes show-time-ring {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.2;
+  }
+  65% {
+    transform: scale(1.18);
+    opacity: 0.72;
+  }
+  100% {
+    transform: scale(1.28);
+    opacity: 0;
+  }
+}
+
+@keyframes show-time-dot {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.35;
+  }
+  50% {
+    transform: translateY(-5px);
+    opacity: 1;
+  }
+}
+
+@keyframes show-time-progress {
+  from {
+    transform: translateX(-78%);
+  }
+  to {
+    transform: translateX(190%);
+  }
+}
+
+.loading-logo-ring {
+  animation: show-time-ring 1.65s ease-out infinite;
+}
+
+.loading-dot {
+  display: block;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: var(--secondary);
+  animation: show-time-dot 1s ease-in-out infinite;
+}
+
+.loading-dot-delay-1 {
+  animation-delay: 0.14s;
+}
+
+.loading-dot-delay-2 {
+  animation-delay: 0.28s;
+}
+
+.loading-progress {
+  width: 52%;
+  animation: show-time-progress 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-logo-ring,
+  .loading-dot,
+  .loading-progress {
+    animation: none;
+  }
+
+  .loading-logo-ring {
+    opacity: 0.45;
+  }
+
+  .loading-dot {
+    opacity: 0.8;
+  }
+
+  .loading-progress {
+    transform: translateX(48%);
+  }
+}
+
 @layer components {
   .premium-panel {
-    border: 1px solid color-mix(in srgb, var(--border) 78%, white 8%);
+    border: 1px solid color-mix(in srgb, var(--border) 92%, white 8%);
     background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.065), transparent),
-      rgba(21, 21, 34, 0.88);
+      linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 249, 252, 0.88)),
+      rgba(255, 255, 255, 0.94);
     box-shadow:
-      0 18px 60px rgba(0, 0, 0, 0.34),
-      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      0 18px 60px rgba(15, 23, 42, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.92);
     backdrop-filter: blur(18px);
   }
 
   .premium-card {
-    border: 1px solid color-mix(in srgb, var(--border) 86%, white 6%);
+    border: 1px solid color-mix(in srgb, var(--border) 92%, white 8%);
     background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 42%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.7) 72%),
       var(--surface);
-    box-shadow: 0 14px 38px rgba(0, 0, 0, 0.28);
+    box-shadow: 0 14px 38px rgba(15, 23, 42, 0.09);
   }
 
   .premium-card:hover {
     border-color: color-mix(in srgb, var(--secondary) 68%, white 8%);
     box-shadow:
-      0 22px 60px rgba(0, 0, 0, 0.36),
-      0 0 0 1px rgba(6, 182, 212, 0.1),
-      0 0 34px rgba(124, 58, 237, 0.16);
+      0 22px 60px rgba(15, 23, 42, 0.14),
+      0 0 0 1px rgba(6, 182, 212, 0.12),
+      0 0 34px rgba(124, 58, 237, 0.12);
   }
 
   .premium-button {
@@ -192,7 +274,7 @@ textarea {
       var(--cta);
     color: var(--cta-foreground);
     box-shadow:
-      0 14px 34px rgba(124, 58, 237, 0.34),
+      0 14px 34px rgba(109, 40, 217, 0.28),
       inset 0 1px 0 rgba(255, 255, 255, 0.18);
   }
 
@@ -210,9 +292,9 @@ textarea {
     justify-content: center;
     border: 1px solid rgba(6, 182, 212, 0.42);
     border-radius: 0.5rem;
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.86);
     color: var(--foreground);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    box-shadow: 0 5px 16px rgba(15, 23, 42, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.9);
   }
 
   .premium-button-secondary:hover {
@@ -225,8 +307,8 @@ textarea {
   .premium-chip {
     border: 1px solid rgba(6, 182, 212, 0.32);
     border-radius: 0.5rem;
-    background: rgba(11, 11, 20, 0.64);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.84);
+    box-shadow: 0 5px 16px rgba(15, 23, 42, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.9);
     backdrop-filter: blur(14px);
   }
 }

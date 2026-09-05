@@ -70,7 +70,7 @@ export function SiteHeader() {
       : "Account";
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-background/78 shadow-[0_10px_38px_rgba(0,0,0,0.28)] backdrop-blur-xl">
+    <header className="sticky top-0 z-40 border-b border-border/90 bg-background/86 shadow-[0_10px_38px_rgba(15,23,42,0.09)] backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:px-6">
         <Link href="/" className="group flex shrink-0 items-center gap-2">
           <Image
@@ -91,7 +91,7 @@ export function SiteHeader() {
             <Link
               key={link.label}
               href={link.href}
-              className="rounded-md px-3 py-2 text-sm font-medium text-muted hover:bg-white/[0.06] hover:text-foreground hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]"
+              className="rounded-md px-3 py-2 text-sm font-medium text-muted hover:bg-surface-muted hover:text-foreground hover:shadow-[inset_0_0_0_1px_rgba(15,23,42,0.04)]"
             >
               {link.label}
             </Link>
@@ -134,7 +134,7 @@ export function SiteHeader() {
       </div>
 
       {mobileOpen ? (
-        <div className="border-t border-white/10 bg-background/95 px-4 py-4 shadow-2xl shadow-black/40 backdrop-blur-xl md:hidden">
+        <div className="border-t border-border bg-background/95 px-4 py-4 shadow-2xl shadow-slate-900/10 backdrop-blur-xl md:hidden">
           <div className="flex flex-col gap-3">
             <Link
               href="/search"
@@ -154,7 +154,7 @@ export function SiteHeader() {
                 <Link
                   key={link.label}
                   href={link.href}
-                  className="rounded-md px-3 py-2 text-sm font-medium text-muted hover:bg-white/[0.07] hover:text-foreground"
+                  className="rounded-md px-3 py-2 text-sm font-medium text-muted hover:bg-surface-muted hover:text-foreground"
                 >
                   {link.label}
                 </Link>

@@ -48,7 +48,7 @@ const statusClasses: Record<SeatStatus | "SELECTED", string> = {
   SELECTED:
     "border-primary bg-primary text-primary-foreground shadow-[inset_0_-3px_0_rgba(6,35,43,0.32),0_0_18px_rgba(6,182,212,0.42)]",
   LOCKED:
-    "cursor-not-allowed border-violet-300/25 bg-violet-400/20 text-violet-100/50",
+    "cursor-not-allowed border-violet-300/60 bg-violet-100 text-violet-700",
   BOOKED:
     "cursor-not-allowed border-accent/55 bg-accent/30 text-accent-foreground/70",
   BLOCKED:
@@ -337,7 +337,7 @@ export function SeatPicker({
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
-      <section className="overflow-hidden rounded-xl border border-border bg-surface p-4 shadow-[0_20px_55px_rgba(0,0,0,0.22)] sm:p-6">
+      <section className="overflow-hidden rounded-xl border border-border bg-surface p-4 shadow-[0_20px_55px_rgba(15,23,42,0.1)] sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">

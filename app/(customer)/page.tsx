@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import {
   ArrowRight,
   CalendarDays,
+  CheckCircle2,
   Compass,
   MapPin,
   Sparkles,
@@ -60,9 +61,9 @@ export default async function CustomerHomePage() {
           sizes="100vw"
           className="object-cover object-center"
         />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(7,11,20,0.96),rgba(7,11,20,0.78)_46%,rgba(7,11,20,0.46))]" />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent,rgba(7,11,20,0.94))]" />
-        <div className="absolute inset-x-0 top-0 h-48 bg-[linear-gradient(180deg,rgba(124,58,237,0.36),transparent)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(247,249,252,0.97),rgba(247,249,252,0.88)_46%,rgba(247,249,252,0.4))]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent,rgba(247,249,252,0.9))]" />
+        <div className="absolute inset-x-0 top-0 h-48 bg-[linear-gradient(180deg,rgba(124,58,237,0.14),transparent)]" />
 
         <div className="relative mx-auto flex min-h-[560px] max-w-7xl flex-col px-5 py-12 sm:px-6 sm:py-16 lg:justify-center">
           <div className="max-w-2xl">
@@ -226,7 +227,7 @@ export default async function CustomerHomePage() {
         </ScrollReveal>
       </div>
 
-      <section className="border-y border-border bg-[linear-gradient(180deg,rgba(25,36,58,0.92),rgba(19,28,46,0.76))]">
+      <section className="border-y border-border bg-[linear-gradient(180deg,rgba(238,243,248,0.96),rgba(255,255,255,0.9))]">
         <div className="mx-auto max-w-7xl px-5 sm:px-6">
           <ScrollReveal>
             <BrowseSection
@@ -273,7 +274,7 @@ export default async function CustomerHomePage() {
         </ScrollReveal>
       </div>
 
-      <section className="border-y border-border bg-[linear-gradient(135deg,rgba(124,58,237,0.82),rgba(13,19,33,0.96)_52%,rgba(6,182,212,0.24))] text-foreground">
+      <section className="border-y border-border bg-[linear-gradient(135deg,rgba(237,233,254,0.9),rgba(255,255,255,0.98)_52%,rgba(207,250,254,0.7))] text-foreground">
         <div className="mx-auto max-w-7xl px-5 py-11 sm:px-6 sm:py-14">
           <ScrollReveal>
             <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -298,22 +299,37 @@ export default async function CustomerHomePage() {
         </div>
       </section>
 
-      <section className="border-b border-border bg-[linear-gradient(180deg,rgba(19,28,46,0.78),rgba(7,11,20,0.98))]">
-        <div className="mx-auto grid max-w-7xl gap-8 px-5 py-12 sm:px-6 md:grid-cols-[1fr_0.9fr] md:items-center">
+      <section className="relative overflow-hidden border-y border-border bg-[radial-gradient(circle_at_12%_10%,rgba(124,58,237,0.16),transparent_32%),radial-gradient(circle_at_88%_88%,rgba(6,182,212,0.13),transparent_30%),linear-gradient(135deg,rgba(255,255,255,0.98),rgba(238,243,248,0.98))]">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-secondary/80 to-transparent" />
+        <div className="relative mx-auto grid max-w-7xl gap-9 px-5 py-14 sm:px-6 sm:py-16 lg:grid-cols-[minmax(0,1.08fr)_minmax(22rem,0.82fr)] lg:items-center lg:gap-16">
           <div>
-            <p className="inline-flex items-center gap-2 text-sm font-semibold text-berry">
-              <Compass className="size-4" aria-hidden="true" />A better city
-              calendar
+            <p className="inline-flex items-center gap-2 rounded-full border border-secondary/35 bg-secondary/10 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-secondary">
+              <Compass className="size-3.5" aria-hidden="true" />
+              Your city, better planned
             </p>
-            <h2 className="mt-3 max-w-xl text-3xl font-semibold tracking-tight">
-              Get the good plans before the group asks what&apos;s happening.
+            <h2 className="mt-5 max-w-2xl text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
+              Get the good plans before the group chat starts asking.
             </h2>
-            <p className="mt-3 max-w-xl text-sm leading-6 text-muted">
-              One considered note a week. New shows, easy wins, and the odd
-              excellent detour.
+            <p className="mt-4 max-w-xl text-base leading-7 text-muted">
+              A thoughtful weekly guide to new releases, local favourites, and
+              the kind of plans worth saving.
             </p>
+            <ul className="mt-6 grid gap-3 text-sm text-foreground/85 sm:grid-cols-2">
+              {[
+                "Weekly picks matched to your city",
+                "Early access to standout events",
+              ].map((benefit) => (
+                <li key={benefit} className="flex items-center gap-2">
+                  <CheckCircle2
+                    className="size-4 shrink-0 text-primary"
+                    aria-hidden="true"
+                  />
+                  {benefit}
+                </li>
+              ))}
+            </ul>
           </div>
-          <div className="premium-panel rounded-md p-5">
+          <div className="rounded-2xl border border-primary/30 bg-surface/90 p-5 shadow-[0_24px_64px_rgba(15,23,42,0.12),0_0_34px_rgba(124,58,237,0.1)] backdrop-blur-md sm:p-6">
             <NewsletterForm />
           </div>
         </div>

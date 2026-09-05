@@ -90,7 +90,7 @@ export function CheckInScanner() {
       <h1 className="text-2xl font-semibold">Entry scanner</h1>
       <video
         ref={videoRef}
-        className="mt-5 aspect-square w-full rounded-md bg-black object-cover"
+        className="mt-5 aspect-square w-full rounded-md bg-surface-muted object-cover"
         muted
         playsInline
       />

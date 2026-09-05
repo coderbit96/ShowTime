@@ -111,7 +111,7 @@ export function CustomerAccountMenu({
           id="customer-account-menu"
           role="menu"
           aria-label="My account"
-          className="premium-panel absolute right-0 top-12 z-50 w-52 rounded-xl border border-border p-2 shadow-[0_18px_45px_rgba(0,0,0,0.42)]"
+          className="premium-panel absolute right-0 top-12 z-50 w-52 rounded-xl border border-border p-2 shadow-[0_18px_45px_rgba(15,23,42,0.16)]"
         >
           {accountLinks.map((item) => {
             const Icon = item.icon;

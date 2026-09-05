@@ -157,7 +157,7 @@ export function ManagementShell({
         {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
       </button>
       <aside
-        className={`fixed inset-y-0 left-0 z-30 flex w-72 flex-col border-r border-white/10 bg-surface/94 p-5 shadow-2xl shadow-black/30 backdrop-blur-xl transition-[transform,width] duration-200 lg:translate-x-0 ${sidebarWidth} ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}
+        className={`fixed inset-y-0 left-0 z-30 flex w-72 flex-col border-r border-border bg-surface/94 p-5 shadow-2xl shadow-slate-900/10 backdrop-blur-xl transition-[transform,width] duration-200 lg:translate-x-0 ${sidebarWidth} ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div className="flex items-center justify-between">
           <Link

@@ -67,7 +67,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">
             Search movies and events
           </h1>
-          <div className="mt-6 max-w-3xl rounded-md border border-border bg-surface px-3 py-1 shadow-lg shadow-black/20">
+          <div className="mt-6 max-w-3xl rounded-md border border-border bg-surface px-3 py-1 shadow-lg shadow-slate-900/10">
             <GlobalSearch
               key={filters.query ?? "empty"}
               initialQuery={filters.query}

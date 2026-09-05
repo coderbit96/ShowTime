@@ -94,7 +94,7 @@ export function GlobalSearch({
               setQuery("");
               setOpen(false);
             }}
-            className="grid size-7 shrink-0 place-items-center rounded-md text-muted hover:bg-white/[0.08] hover:text-foreground"
+            className="grid size-7 shrink-0 place-items-center rounded-md text-muted hover:bg-surface-muted hover:text-foreground"
             aria-label="Clear search"
           >
             <X className="size-4" aria-hidden="true" />
@@ -112,7 +112,7 @@ export function GlobalSearch({
           id="global-search-results"
           className="premium-panel absolute left-0 right-0 top-[calc(100%+0.65rem)] z-50 overflow-hidden rounded-md"
         >
-          <div className="border-b border-white/10 px-3 py-2 text-xs text-muted">
+          <div className="border-b border-border px-3 py-2 text-xs text-muted">
             {loading ? "Finding plans..." : "Search results"}
           </div>
           {!loading && results.length === 0 ? (
@@ -130,7 +130,7 @@ export function GlobalSearch({
                 router.push(`/search?q=${encodeURIComponent(item.title)}`);
                 setOpen(false);
               }}
-              className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left hover:bg-white/[0.07]"
+              className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left hover:bg-surface-muted"
             >
               <span className="min-w-0">
                 <span className="block truncate text-sm font-medium text-foreground">
@@ -150,7 +150,7 @@ export function GlobalSearch({
             type="button"
             onMouseDown={(event) => event.preventDefault()}
             onClick={goToResults}
-            className="flex w-full items-center justify-between border-t border-white/10 px-3 py-3 text-sm font-semibold text-secondary hover:bg-white/[0.07]"
+            className="flex w-full items-center justify-between border-t border-border px-3 py-3 text-sm font-semibold text-secondary hover:bg-surface-muted"
           >
             View all results
             <Search className="size-4" aria-hidden="true" />

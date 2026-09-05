@@ -10,12 +10,23 @@ import { User } from "@/models";
 const profileSchema = z.object({
   name: z.string().trim().min(2).max(100),
   phone: z.string().trim().max(30).optional().or(z.literal("")),
-  avatar: z.string().url().max(1000).optional().or(z.literal("")),
-  cityId: z
+  dateOfBirth: z
     .string()
-    .regex(/^[a-f\d]{24}$/i)
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
     .optional()
     .or(z.literal("")),
+  gender: z
+    .enum(["FEMALE", "MALE", "NON_BINARY", "PREFER_NOT_TO_SAY"])
+    .optional()
+    .or(z.literal("")),
+  address: z.object({
+    line1: z.string().trim().max(160).optional().or(z.literal("")),
+    line2: z.string().trim().max(160).optional().or(z.literal("")),
+    locality: z.string().trim().max(100).optional().or(z.literal("")),
+    state: z.string().trim().max(100).optional().or(z.literal("")),
+    postalCode: z.string().trim().max(20).optional().or(z.literal("")),
+    country: z.string().trim().max(100).optional().or(z.literal("")),
+  }),
 });
 
 export async function GET(request: NextRequest) {
@@ -23,8 +34,7 @@ export async function GET(request: NextRequest) {
     const user = await requireBookingUser(request);
     await connectToDatabase();
     const profile = await User.findById(user.id)
-      .populate({ path: "city", select: "name slug" })
-      .select("name email phone avatar city")
+      .select("name email phone dateOfBirth gender address")
       .lean();
     return NextResponse.json({ profile });
   } catch (error) {
@@ -47,19 +57,29 @@ export async function PATCH(request: NextRequest) {
         { status: 400 },
       );
     await connectToDatabase();
+    const address = parsed.data.address;
+    const hasAddress = Object.values(address).some(Boolean);
+    const update = {
+      $set: { name: parsed.data.name } as Record<string, unknown>,
+      $unset: {} as Record<string, 1>,
+    };
+
+    if (parsed.data.phone) update.$set.phone = parsed.data.phone;
+    else update.$unset.phone = 1;
+    if (parsed.data.dateOfBirth)
+      update.$set.dateOfBirth = new Date(`${parsed.data.dateOfBirth}T00:00:00.000Z`);
+    else update.$unset.dateOfBirth = 1;
+    if (parsed.data.gender) update.$set.gender = parsed.data.gender;
+    else update.$unset.gender = 1;
+    if (hasAddress) update.$set.address = address;
+    else update.$unset.address = 1;
+
     const profile = await User.findByIdAndUpdate(
       user.id,
-      {
-        $set: {
-          name: parsed.data.name,
-          phone: parsed.data.phone || undefined,
-          avatar: parsed.data.avatar || undefined,
-          city: parsed.data.cityId || undefined,
-        },
-      },
+      update,
       { returnDocument: "after" },
     )
-      .select("name email phone avatar city")
+      .select("name email phone dateOfBirth gender address")
       .lean();
     return NextResponse.json({ profile });
   } catch (error) {

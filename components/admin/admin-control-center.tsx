@@ -478,7 +478,7 @@ function CustomerProfile({
   const cancellations = (data?.cancellations as AnyRecord[] | undefined) ?? [];
 
   return (
-    <section className="rounded-md border border-secondary/35 bg-surface p-5 shadow-xl shadow-black/15">
+    <section className="rounded-md border border-secondary/35 bg-surface p-5 shadow-xl shadow-slate-900/10">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
@@ -658,7 +658,7 @@ function OrganizerProfile({
   };
 
   return (
-    <section className="rounded-md border border-secondary/35 bg-surface p-5 shadow-xl shadow-black/15">
+    <section className="rounded-md border border-secondary/35 bg-surface p-5 shadow-xl shadow-slate-900/10">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">

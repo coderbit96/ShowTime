@@ -48,7 +48,7 @@ function FilterGroup({
   children: ReactNode;
 }) {
   return (
-    <fieldset className="border-t border-white/10 pt-4 first:border-0 first:pt-0">
+    <fieldset className="border-t border-border pt-4 first:border-0 first:pt-0">
       <legend className="mb-3 text-sm font-semibold text-foreground">
         {title}
       </legend>
@@ -113,7 +113,7 @@ export function SearchFilters() {
                   params.append("city", event.target.value);
               })
             }
-            className="h-10 rounded-md border border-white/10 bg-background/70 px-3 text-sm text-foreground focus:border-secondary"
+            className="h-10 rounded-md border border-border bg-background/70 px-3 text-sm text-foreground focus:border-secondary"
           >
             <option value="">All cities</option>
             {cities.map((city) => (
@@ -162,7 +162,7 @@ export function SearchFilters() {
                 onClick={() =>
                   updateParams((params) => params.set("date", value))
                 }
-                className={`min-h-9 rounded-md border px-2 text-xs font-medium ${dateScope === value ? "border-secondary bg-secondary/15 text-foreground shadow-[0_0_18px_rgba(6,182,212,0.12)]" : "border-white/10 text-muted hover:bg-white/[0.07] hover:text-foreground"}`}
+                className={`min-h-9 rounded-md border px-2 text-xs font-medium ${dateScope === value ? "border-secondary bg-secondary/15 text-foreground shadow-[0_0_18px_rgba(6,182,212,0.12)]" : "border-border text-muted hover:bg-surface-muted hover:text-foreground"}`}
               >
                 {label}
               </button>
@@ -180,7 +180,7 @@ export function SearchFilters() {
                     else params.delete("startDate");
                   })
                 }
-                className="h-10 rounded-md border border-white/10 bg-background/70 px-3 text-sm focus:border-secondary"
+                className="h-10 rounded-md border border-border bg-background/70 px-3 text-sm focus:border-secondary"
                 aria-label="Start date"
               />
               <input
@@ -193,7 +193,7 @@ export function SearchFilters() {
                     else params.delete("endDate");
                   })
                 }
-                className="h-10 rounded-md border border-white/10 bg-background/70 px-3 text-sm focus:border-secondary"
+                className="h-10 rounded-md border border-border bg-background/70 px-3 text-sm focus:border-secondary"
                 aria-label="End date"
               />
             </div>
@@ -258,7 +258,7 @@ export function SearchFilters() {
               }
             }}
             placeholder="Venue name"
-            className="h-10 rounded-md border border-white/10 bg-background/70 px-3 text-sm placeholder:text-muted focus:border-secondary"
+            className="h-10 rounded-md border border-border bg-background/70 px-3 text-sm placeholder:text-muted focus:border-secondary"
           />
         </FilterGroup>
         <FilterGroup title="Rating">
@@ -271,7 +271,7 @@ export function SearchFilters() {
                 else params.delete("rating");
               })
             }
-            className="h-10 rounded-md border border-white/10 bg-background/70 px-3 text-sm focus:border-secondary"
+            className="h-10 rounded-md border border-border bg-background/70 px-3 text-sm focus:border-secondary"
           >
             <option value="">Any rating</option>
             <option value="4">4.0 and above</option>

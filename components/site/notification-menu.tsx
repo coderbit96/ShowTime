@@ -73,7 +73,7 @@ export function NotificationMenu() {
         ) : null}
       </button>
       {open ? (
-        <div className="absolute right-0 top-12 z-50 w-[min(22rem,calc(100vw-2rem))] rounded-md border border-border bg-surface p-2 shadow-2xl shadow-black/30">
+        <div className="absolute right-0 top-12 z-50 w-[min(22rem,calc(100vw-2rem))] rounded-md border border-border bg-surface p-2 shadow-2xl shadow-slate-900/15">
           <div className="flex items-center justify-between px-2 py-2">
             <p className="text-sm font-semibold">Notifications</p>
             <button

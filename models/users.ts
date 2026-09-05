@@ -8,6 +8,19 @@ const UserSchema = new Schema(
     email: { type: String, required: true, trim: true, lowercase: true },
     phone: { type: String, trim: true },
     avatar: { type: String, trim: true },
+    dateOfBirth: { type: Date },
+    gender: {
+      type: String,
+      enum: ["FEMALE", "MALE", "NON_BINARY", "PREFER_NOT_TO_SAY"],
+    },
+    address: {
+      line1: { type: String, trim: true, maxlength: 160 },
+      line2: { type: String, trim: true, maxlength: 160 },
+      locality: { type: String, trim: true, maxlength: 100 },
+      state: { type: String, trim: true, maxlength: 100 },
+      postalCode: { type: String, trim: true, maxlength: 20 },
+      country: { type: String, trim: true, maxlength: 100 },
+    },
     role: {
       type: String,
       enum: ["CUSTOMER", "ORGANIZER", "ADMIN"],

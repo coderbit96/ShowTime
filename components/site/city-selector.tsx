@@ -276,7 +276,7 @@ export function CitySelector() {
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="city-picker-title"
-                className="relative z-10 flex max-h-[calc(100dvh-1.5rem)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-border bg-section shadow-[0_28px_100px_rgba(0,0,0,0.58)] sm:max-h-[calc(100dvh-3rem)]"
+                className="relative z-10 flex max-h-[calc(100dvh-1.5rem)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-border bg-section shadow-[0_28px_100px_rgba(15,23,42,0.2)] sm:max-h-[calc(100dvh-3rem)]"
               >
                 <header className="flex items-center justify-between border-b border-border px-4 py-3 sm:px-6 sm:py-4">
                   <div>

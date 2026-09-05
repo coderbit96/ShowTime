@@ -146,7 +146,7 @@ export function CategoryExplorer() {
               href={category.href}
               aria-hidden={duplicate}
               tabIndex={duplicate ? -1 : undefined}
-              className="group w-[calc(50%-0.375rem)] shrink-0 rounded-2xl border border-border bg-surface p-4 shadow-[0_12px_32px_rgba(0,0,0,0.16)] transition duration-200 hover:-translate-y-1 hover:border-primary/60 hover:bg-elevated sm:w-[224px] lg:w-[236px]"
+              className="group w-[calc(50%-0.375rem)] shrink-0 rounded-2xl border border-border bg-surface p-4 shadow-[0_12px_32px_rgba(15,23,42,0.08)] transition duration-200 hover:-translate-y-1 hover:border-primary/60 hover:bg-elevated sm:w-[224px] lg:w-[236px]"
             >
               <span className="grid size-10 place-items-center rounded-xl bg-primary/12 text-primary transition group-hover:bg-primary group-hover:text-primary-foreground">
                 <Icon className="size-5" aria-hidden="true" />
