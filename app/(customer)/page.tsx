@@ -14,7 +14,6 @@ import {
   ContentRail,
   EventCard,
   FlashSaleBanner,
-  HomepageSearch,
   MovieCard,
   VenueCard,
 } from "@/components/catalog";
@@ -45,7 +44,7 @@ export default async function CustomerHomePage() {
 
   return (
     <main className="overflow-hidden bg-background text-foreground">
-      <section className="relative isolate min-h-[620px] overflow-hidden bg-background text-foreground">
+      <section className="relative isolate min-h-[560px] overflow-hidden bg-background text-foreground">
         <Image
           src="/images/catalog/midnight-grove-live.png"
           alt="Guests arriving at an open-air cultural festival in Kolkata"
@@ -58,7 +57,7 @@ export default async function CustomerHomePage() {
         <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent,rgba(7,11,20,0.94))]" />
         <div className="absolute inset-x-0 top-0 h-48 bg-[linear-gradient(180deg,rgba(124,58,237,0.36),transparent)]" />
 
-        <div className="relative mx-auto flex min-h-[620px] max-w-7xl flex-col px-5 pb-24 pt-12 sm:px-6 sm:pt-16 lg:justify-center lg:pb-28">
+        <div className="relative mx-auto flex min-h-[560px] max-w-7xl flex-col px-5 py-12 sm:px-6 sm:py-16 lg:justify-center">
           <div className="max-w-2xl">
             <div className="premium-chip inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold text-foreground/88">
               <MapPin className="size-3.5 text-secondary" aria-hidden="true" />
@@ -67,7 +66,7 @@ export default async function CustomerHomePage() {
             <p className="mt-7 text-xs font-bold uppercase tracking-[0.18em] text-primary">
               Kolkata is happening
             </p>
-            <h1 className="mt-4 max-w-2xl text-4xl font-semibold leading-[1.02] tracking-tight sm:text-5xl lg:text-7xl">
+            <h1 className="mt-4 text-4xl font-semibold leading-[1.02] tracking-tight sm:text-5xl min-[900px]:max-w-none min-[900px]:whitespace-nowrap min-[900px]:text-[clamp(2.75rem,4.6vw,4rem)]">
               Make tonight worth talking about.
             </h1>
             <p className="mt-5 max-w-lg text-base leading-7 text-foreground/78 sm:text-lg">
@@ -127,29 +126,8 @@ export default async function CustomerHomePage() {
               </Link>
             </div>
           </div>
-
-          <div className="premium-panel mt-auto hidden max-w-2xl rounded-2xl p-4 text-sm text-foreground/78 lg:block">
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <p className="text-xl font-semibold text-primary">12+</p>
-                <p className="mt-1 text-xs text-muted">categories</p>
-              </div>
-              <div>
-                <p className="text-xl font-semibold text-accent">5 min</p>
-                <p className="mt-1 text-xs text-muted">safe seat locks</p>
-              </div>
-              <div>
-                <p className="text-xl font-semibold text-warning">QR</p>
-                <p className="mt-1 text-xs text-muted">verified tickets</p>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
-
-      <div className="relative z-10 mx-auto -mt-16 max-w-7xl px-5 sm:px-6">
-        <HomepageSearch />
-      </div>
 
       <CategoryExplorer />
 

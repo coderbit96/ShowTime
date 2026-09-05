@@ -4,16 +4,27 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   Building2,
+  BookOpen,
+  Castle,
   Check,
   ChevronDown,
-  Church,
+  Crown,
+  Flower2,
+  Gem,
+  GraduationCap,
   Landmark,
   LocateFixed,
   MapPin,
-  Palmtree,
+  Mountain,
   Search,
+  Ship,
+  TramFront,
   Trees,
+  Utensils,
+  Waves,
+  Warehouse,
   X,
+  type LucideIcon,
 } from "lucide-react";
 import { useUiStore } from "@/stores/ui-store";
 
@@ -42,6 +53,11 @@ const popularCities: PopularCity[] = [
   { id: "chennai", name: "Chennai", latitude: 13.0827, longitude: 80.2707 },
   { id: "kolkata", name: "Kolkata", latitude: 22.5726, longitude: 88.3639 },
   { id: "kochi", name: "Kochi", latitude: 9.9312, longitude: 76.2673 },
+  { id: "jaipur", name: "Jaipur", latitude: 26.9124, longitude: 75.7873 },
+  { id: "lucknow", name: "Lucknow", latitude: 26.8467, longitude: 80.9462 },
+  { id: "indore", name: "Indore", latitude: 22.7196, longitude: 75.8577 },
+  { id: "surat", name: "Surat", latitude: 21.1702, longitude: 72.8311 },
+  { id: "guwahati", name: "Guwahati", latitude: 26.1445, longitude: 91.7362 },
 ];
 
 const otherCities: City[] = [
@@ -58,15 +74,11 @@ const otherCities: City[] = [
   { id: "durgapur", name: "Durgapur" },
   { id: "faridabad", name: "Faridabad" },
   { id: "gangtok", name: "Gangtok" },
-  { id: "guwahati", name: "Guwahati" },
   { id: "gurugram", name: "Gurugram" },
   { id: "howrah", name: "Howrah" },
-  { id: "indore", name: "Indore" },
-  { id: "jaipur", name: "Jaipur" },
   { id: "jamshedpur", name: "Jamshedpur" },
   { id: "kanpur", name: "Kanpur" },
   { id: "kharagpur", name: "Kharagpur" },
-  { id: "lucknow", name: "Lucknow" },
   { id: "ludhiana", name: "Ludhiana" },
   { id: "madurai", name: "Madurai" },
   { id: "mysuru", name: "Mysuru" },
@@ -77,7 +89,6 @@ const otherCities: City[] = [
   { id: "raipur", name: "Raipur" },
   { id: "ranchi", name: "Ranchi" },
   { id: "siliguri", name: "Siliguri" },
-  { id: "surat", name: "Surat" },
   { id: "thane", name: "Thane" },
   { id: "udaipur", name: "Udaipur" },
   { id: "vadodara", name: "Vadodara" },
@@ -87,7 +98,23 @@ const otherCities: City[] = [
 ];
 
 const allCities = [...popularCities, ...otherCities];
-const cityIcons = [Landmark, Building2, Church, Trees, Palmtree];
+const cityIcons: Record<string, LucideIcon> = {
+  mumbai: Landmark,
+  "delhi-ncr": Building2,
+  bengaluru: Trees,
+  hyderabad: Castle,
+  chandigarh: Flower2,
+  ahmedabad: Warehouse,
+  pune: GraduationCap,
+  chennai: Waves,
+  kolkata: TramFront,
+  kochi: Ship,
+  jaipur: Crown,
+  lucknow: BookOpen,
+  indore: Utensils,
+  surat: Gem,
+  guwahati: Mountain,
+};
 
 function distanceInKm(latitude: number, longitude: number, city: PopularCity) {
   const latitudeDelta = (city.latitude - latitude) * 111;
@@ -265,7 +292,7 @@ export function CitySelector() {
                       value={query}
                       onChange={(event) => setQuery(event.target.value)}
                       placeholder="Search for your city"
-                      className="h-12 w-full rounded-xl border border-border bg-background pl-12 pr-4 text-sm text-foreground outline-none transition placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-14 sm:text-base"
+                      className="h-12 w-full rounded-xl border border-border bg-background pl-12 pr-4 text-sm text-foreground outline-none transition placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 focus-visible:outline-none sm:h-14 sm:text-base"
                     />
                   </label>
 
@@ -315,32 +342,32 @@ export function CitySelector() {
                         <h3 className="text-center text-base font-semibold text-foreground">
                           Popular cities
                         </h3>
-                        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5 sm:gap-2.5">
-                          {popularCities.map((city, index) => {
-                            const Icon = cityIcons[index % cityIcons.length];
+                        <div className="mx-auto mt-3 grid w-full grid-cols-2 gap-1.5 sm:max-w-[30rem] sm:grid-cols-3 sm:gap-2 lg:max-w-none lg:w-fit lg:grid-cols-[repeat(5,9.5rem)]">
+                          {popularCities.map((city) => {
+                            const Icon = cityIcons[city.id] ?? MapPin;
                             const isSelected = city.id === selectedCity.id;
                             return (
                               <button
                                 type="button"
                                 key={city.id}
                                 onClick={() => chooseCity(city.id)}
-                                className={`group relative flex min-h-20 flex-col items-center justify-center rounded-xl border px-2 py-2 text-center transition duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:min-h-20 ${
+                                className={`group relative flex min-h-16 flex-col items-center justify-center rounded-lg border px-1.5 py-1.5 text-center transition duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:min-h-16 ${
                                   isSelected
                                     ? "border-primary/70 bg-primary/10 text-foreground shadow-[0_12px_26px_rgba(6,182,212,0.12)]"
                                     : "border-border bg-background/55 text-muted hover:-translate-y-0.5 hover:border-secondary/65 hover:bg-surface-muted hover:text-foreground"
                                 }`}
                               >
                                 <Icon
-                                  className={`size-7 sm:size-8 ${isSelected ? "text-primary" : "text-secondary group-hover:text-primary"}`}
+                                  className={`size-6 ${isSelected ? "text-primary" : "text-secondary group-hover:text-primary"}`}
                                   strokeWidth={1.55}
                                   aria-hidden="true"
                                 />
-                                <span className="mt-1.5 text-sm font-semibold">
+                                <span className="mt-1 text-xs font-semibold">
                                   {city.name}
                                 </span>
                                 {isSelected ? (
                                   <Check
-                                    className="absolute right-2 top-2 size-4 text-primary"
+                                    className="absolute right-1.5 top-1.5 size-3.5 text-primary"
                                     aria-label="Selected"
                                   />
                                 ) : null}
@@ -354,7 +381,7 @@ export function CitySelector() {
                         <h3 className="text-center text-base font-semibold text-foreground">
                           Other cities
                         </h3>
-                        <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-1 sm:grid-cols-3 lg:grid-cols-5 sm:gap-x-6">
+                        <div className="mt-4 grid grid-cols-2 justify-items-center gap-x-3 gap-y-2 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-5">
                           {otherCities.map((city) => (
                             <CityOption
                               key={city.id}
@@ -393,15 +420,18 @@ function CityOption({
     <button
       type="button"
       onClick={() => onSelect(city.id)}
-      className={`flex min-h-10 items-center justify-between rounded-lg text-left text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+      className={`relative flex min-h-10 items-center rounded-lg text-sm transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
         compact
-          ? "px-2 text-muted hover:bg-surface-muted hover:text-foreground"
-          : "border border-border bg-background px-3 py-2.5 font-medium text-foreground hover:border-secondary/65 hover:bg-surface-muted"
+          ? "justify-between px-2 text-muted hover:bg-surface-muted hover:text-foreground"
+          : "w-full justify-center border border-border bg-background px-3 py-2.5 text-center font-medium text-foreground hover:-translate-y-0.5 hover:border-primary/70 hover:bg-primary/10 hover:text-primary hover:shadow-[0_0_20px_rgba(6,182,212,0.20)]"
       } ${selected ? "bg-primary/10 text-primary" : ""}`}
     >
       <span className="truncate">{city.name}</span>
       {selected ? (
-        <Check className="ml-2 size-4 shrink-0" aria-label="Selected" />
+        <Check
+          className={`size-4 shrink-0 ${compact ? "ml-2" : "absolute right-3"}`}
+          aria-label="Selected"
+        />
       ) : null}
     </button>
   );

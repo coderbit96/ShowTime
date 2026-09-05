@@ -15,6 +15,23 @@ const dashboardByRole: Record<Exclude<Role, "CUSTOMER">, string> = {
   ORGANIZER: "/organizer/dashboard",
 };
 
+async function readSessionResponse(response: Response) {
+  const body = await response.text();
+  if (!body.trim())
+    return {
+      error:
+        "The account service did not return a response. Please try again shortly.",
+    };
+  try {
+    return JSON.parse(body) as { user?: { role: Role }; error?: string };
+  } catch {
+    return {
+      error:
+        "The account service returned an invalid response. Please try again shortly.",
+    };
+  }
+}
+
 export function CustomerAccountGate({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [state, setState] = useState<GateState>("checking");
@@ -41,10 +58,7 @@ export function CustomerAccountGate({ children }: { children: ReactNode }) {
           headers: { Authorization: `Bearer ${token}` },
           cache: "no-store",
         });
-        const payload = (await response.json()) as {
-          user?: { role: Role };
-          error?: string;
-        };
+        const payload = await readSessionResponse(response);
         if (!response.ok || !payload.user)
           throw new Error(payload.error ?? "Unable to verify your account.");
         if (!active) return;

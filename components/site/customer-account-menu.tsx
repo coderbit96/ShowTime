@@ -94,15 +94,15 @@ export function CustomerAccountMenu({
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="premium-button h-10 gap-2 px-3 text-sm font-semibold"
+        className="premium-button h-9 gap-1.5 px-2.5 text-xs font-semibold"
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls="customer-account-menu"
       >
-        <UserRound className="size-4" aria-hidden="true" />
+        <UserRound className="size-3.5" aria-hidden="true" />
         <span>My account</span>
         <ChevronDown
-          className={`size-4 transition-transform ${open ? "rotate-180" : ""}`}
+          className={`size-3.5 transition-transform ${open ? "rotate-180" : ""}`}
           aria-hidden="true"
         />
       </button>

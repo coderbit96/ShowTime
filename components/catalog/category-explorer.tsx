@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 import {
   Clapperboard,
   Drama,
@@ -57,6 +60,34 @@ const categories: Category[] = [
 ];
 
 export function CategoryExplorer() {
+  const railRef = useRef<HTMLDivElement>(null);
+  const pausedRef = useRef(false);
+
+  useEffect(() => {
+    const rail = railRef.current;
+    if (!rail || window.matchMedia("(prefers-reduced-motion: reduce)").matches)
+      return;
+
+    let frameId = 0;
+    let previousTime = performance.now();
+    const scrollSpeed = 24;
+
+    const animate = (currentTime: number) => {
+      const elapsed = Math.min(currentTime - previousTime, 80);
+      previousTime = currentTime;
+      const loopPoint = rail.scrollWidth / 2;
+
+      if (!pausedRef.current && loopPoint > rail.clientWidth) {
+        rail.scrollLeft += (elapsed / 1_000) * scrollSpeed;
+        if (rail.scrollLeft >= loopPoint) rail.scrollLeft -= loopPoint;
+      }
+      frameId = window.requestAnimationFrame(animate);
+    };
+
+    frameId = window.requestAnimationFrame(animate);
+    return () => window.cancelAnimationFrame(frameId);
+  }, []);
+
   return (
     <section
       aria-labelledby="explore-by-mood"
@@ -82,14 +113,40 @@ export function CategoryExplorer() {
           Curated for Kolkata
         </p>
       </div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        {categories.map((category) => {
+      <div
+        ref={railRef}
+        onPointerEnter={() => {
+          pausedRef.current = true;
+        }}
+        onPointerLeave={() => {
+          pausedRef.current = false;
+        }}
+        onFocusCapture={() => {
+          pausedRef.current = true;
+        }}
+        onBlurCapture={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget))
+            pausedRef.current = false;
+        }}
+        onPointerDown={() => {
+          pausedRef.current = true;
+        }}
+        onPointerUp={() => {
+          pausedRef.current = false;
+        }}
+        className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        aria-label="Explore entertainment categories"
+      >
+        {[...categories, ...categories].map((category, index) => {
           const Icon = category.icon;
+          const duplicate = index >= categories.length;
           return (
             <Link
-              key={category.label}
+              key={`${category.label}-${index}`}
               href={category.href}
-              className="group rounded-2xl border border-border bg-surface p-4 shadow-[0_12px_32px_rgba(0,0,0,0.16)] transition duration-200 hover:-translate-y-1 hover:border-primary/60 hover:bg-elevated"
+              aria-hidden={duplicate}
+              tabIndex={duplicate ? -1 : undefined}
+              className="group w-[calc(50%-0.375rem)] shrink-0 rounded-2xl border border-border bg-surface p-4 shadow-[0_12px_32px_rgba(0,0,0,0.16)] transition duration-200 hover:-translate-y-1 hover:border-primary/60 hover:bg-elevated sm:w-[224px] lg:w-[236px]"
             >
               <span className="grid size-10 place-items-center rounded-xl bg-primary/12 text-primary transition group-hover:bg-primary group-hover:text-primary-foreground">
                 <Icon className="size-5" aria-hidden="true" />

@@ -328,6 +328,42 @@ export const mockVenues: VenueCard[] = [
     eventCount: 11,
     specialty: "Sports and big nights",
   },
+  {
+    id: "science-city-auditorium",
+    name: "Science City Auditorium",
+    neighborhood: "EM Bypass",
+    city: "Kolkata",
+    image: image.cinema,
+    eventCount: 8,
+    specialty: "Family shows and exhibitions",
+  },
+  {
+    id: "biswa-bangla-mela-prangan",
+    name: "Biswa Bangla Mela Prangan",
+    neighborhood: "New Town",
+    city: "Kolkata",
+    image: image.concert,
+    eventCount: 16,
+    specialty: "Festivals and large-scale events",
+  },
+  {
+    id: "kala-mandir",
+    name: "Kala Mandir",
+    neighborhood: "Shakespeare Sarani",
+    city: "Kolkata",
+    image: image.gallery,
+    eventCount: 6,
+    specialty: "Theatre, dance, and classical music",
+  },
+  {
+    id: "eco-park",
+    name: "Eco Park",
+    neighborhood: "New Town",
+    city: "Kolkata",
+    image: image.workshop,
+    eventCount: 12,
+    specialty: "Outdoor activities and weekend markets",
+  },
 ];
 
 const byCategory = (category: ContentCard["category"]) =>

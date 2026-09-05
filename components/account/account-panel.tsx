@@ -82,6 +82,23 @@ type WalletPass = {
   expiresAt: string;
 };
 
+async function readApiPayload(response: Response) {
+  const body = await response.text();
+  if (!body.trim())
+    return {
+      error:
+        "The account service did not return a response. Please try again shortly.",
+    };
+  try {
+    return JSON.parse(body) as { error?: string; [key: string]: unknown };
+  } catch {
+    return {
+      error:
+        "The account service returned an invalid response. Please try again shortly.",
+    };
+  }
+}
+
 async function authorizedFetch(path: string, options: RequestInit = {}) {
   const token = await firebaseAuth.currentUser?.getIdToken();
   if (!token) throw new Error("Sign in to manage your account.");
@@ -93,10 +110,7 @@ async function authorizedFetch(path: string, options: RequestInit = {}) {
       ...options.headers,
     },
   });
-  const payload = (await response.json()) as {
-    error?: string;
-    [key: string]: unknown;
-  };
+  const payload = await readApiPayload(response);
   if (!response.ok) throw new Error(payload.error ?? "Request failed.");
   return payload;
 }
