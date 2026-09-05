@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged, type User } from "firebase/auth";
-import { LoaderCircle } from "lucide-react";
+import { LoaderCircle, RefreshCw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { firebaseAuth } from "@/lib/firebase/client";
 import {
@@ -22,6 +22,7 @@ export function CustomerAccountGate({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [state, setState] = useState<GateState>("checking");
   const [message, setMessage] = useState("Checking your account...");
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -72,20 +73,38 @@ export function CustomerAccountGate({ children }: { children: ReactNode }) {
       active = false;
       unsubscribe();
     };
-  }, [router]);
+  }, [attempt, router]);
+
+  function retry() {
+    setState("checking");
+    setMessage("Checking your account again...");
+    setAttempt((current) => current + 1);
+  }
 
   if (state === "allowed") return <>{children}</>;
 
   return (
     <div className="grid min-h-[55vh] place-items-center text-foreground">
       <div
-        className={`flex max-w-md items-center gap-3 rounded-md border px-4 py-3 text-sm ${state === "error" ? "border-accent/50 bg-accent/10" : "border-border bg-surface text-muted"}`}
+        className={`max-w-md rounded-md border px-4 py-3 text-sm ${state === "error" ? "border-accent/50 bg-accent/10" : "border-border bg-surface text-muted"}`}
         role={state === "error" ? "alert" : "status"}
       >
-        {state !== "error" ? (
-          <LoaderCircle className="size-5 shrink-0 animate-spin" />
+        <div className="flex items-center gap-3">
+          {state !== "error" ? (
+            <LoaderCircle className="size-5 shrink-0 animate-spin" />
+          ) : null}
+          <span>{message}</span>
+        </div>
+        {state === "error" ? (
+          <button
+            type="button"
+            onClick={retry}
+            className="premium-button-secondary mt-3 h-9 gap-2 px-3 text-xs font-semibold"
+          >
+            <RefreshCw className="size-3.5" aria-hidden="true" />
+            Try again
+          </button>
         ) : null}
-        {message}
       </div>
     </div>
   );

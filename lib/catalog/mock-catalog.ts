@@ -366,70 +366,223 @@ export const mockVenues: VenueCard[] = [
   },
 ];
 
-const byCategory = (category: ContentCard["category"]) =>
-  mockCatalog.filter((item) => item.category === category);
-
-export const mockHomepageCatalog: HomepageCatalog = {
-  city: "Kolkata",
-  hero: mockCatalog[5],
-  trending: [
-    mockCatalog[3],
-    mockCatalog[0],
-    mockCatalog[6],
-    mockCatalog[8],
-    mockCatalog[9],
-  ],
-  recommendedMovies: byCategory("Movie"),
-  liveEvents: [
-    mockCatalog[3],
-    mockCatalog[4],
-    mockCatalog[9],
-    mockCatalog[5],
-    mockCatalog[6],
-  ],
-  concerts: [
-    mockCatalog[5],
-    mockCatalog[1],
-    mockCatalog[3],
-    mockCatalog[2],
-    mockCatalog[4],
-  ],
-  comedy: [
-    mockCatalog[6],
-    mockCatalog[4],
-    mockCatalog[0],
-    mockCatalog[1],
-    mockCatalog[3],
-  ],
-  sports: [
-    mockCatalog[7],
-    mockCatalog[8],
-    mockCatalog[5],
-    mockCatalog[3],
-    mockCatalog[9],
-  ],
-  weekendExperiences: [
-    mockCatalog[9],
-    mockCatalog[4],
-    mockCatalog[3],
-    mockCatalog[5],
-    mockCatalog[1],
-  ],
-  under499: [
-    mockCatalog[0],
-    mockCatalog[1],
-    mockCatalog[3],
-    mockCatalog[4],
-    mockCatalog[6],
-    mockCatalog[8],
-    mockCatalog[9],
-  ],
-  popularVenues: mockVenues,
-  personalized: [
-    mockCatalog[0],
-    mockCatalog[5],
-    mockCatalog[6],
-    mockCatalog[2],
-    mockCatalog[9],
-  ],
+const cityDetails: Record<
+  string,
+  { name: string; venues: string[]; neighborhoods: string[] }
+> = {
+  kolkata: {
+    name: "Kolkata",
+    venues: [
+      "PVR: Mani Square Mall",
+      "INOX: South City",
+      "Nazrul Mancha",
+      "Netaji Indoor Stadium",
+    ],
+    neighborhoods: ["Park Street", "Ballygunge", "New Town", "Maidan"],
+  },
+  mumbai: {
+    name: "Mumbai",
+    venues: [
+      "PVR: Phoenix Marketcity",
+      "Jio World Convention Centre",
+      "NMACC",
+      "Wankhede Stadium",
+    ],
+    neighborhoods: ["BKC", "Andheri", "Lower Parel", "Bandra"],
+  },
+  "delhi-ncr": {
+    name: "Delhi NCR",
+    venues: [
+      "PVR: Select Citywalk",
+      "India Habitat Centre",
+      "Jawaharlal Nehru Stadium",
+      "Kingdom of Dreams",
+    ],
+    neighborhoods: ["Saket", "Connaught Place", "Gurugram", "Noida"],
+  },
+  bengaluru: {
+    name: "Bengaluru",
+    venues: [
+      "PVR: Orion Mall",
+      "Phoenix Marketcity",
+      "KTPO Convention Centre",
+      "Sree Kanteerava Stadium",
+    ],
+    neighborhoods: ["Whitefield", "Indiranagar", "Koramangala", "Malleshwaram"],
+  },
+  hyderabad: {
+    name: "Hyderabad",
+    venues: [
+      "PVR: Inorbit Mall",
+      "Shilpakala Vedika",
+      "HITEX Exhibition Centre",
+      "Gachibowli Indoor Stadium",
+    ],
+    neighborhoods: [
+      "Hitech City",
+      "Banjara Hills",
+      "Jubilee Hills",
+      "Gachibowli",
+    ],
+  },
+  chennai: {
+    name: "Chennai",
+    venues: [
+      "PVR: VR Chennai",
+      "Phoenix Marketcity",
+      "The Music Academy",
+      "Jawaharlal Nehru Stadium",
+    ],
+    neighborhoods: ["Anna Nagar", "T. Nagar", "Adyar", "Nungambakkam"],
+  },
+  pune: {
+    name: "Pune",
+    venues: [
+      "PVR: Pavilion Mall",
+      "Bal Gandharva Rang Mandir",
+      "The Mills",
+      "MCA International Stadium",
+    ],
+    neighborhoods: ["Koregaon Park", "Baner", "Shivajinagar", "Viman Nagar"],
+  },
+  ahmedabad: {
+    name: "Ahmedabad",
+    venues: [
+      "PVR: Acropolis Mall",
+      "Natarani Amphitheatre",
+      "Tagore Hall",
+      "Narendra Modi Stadium",
+    ],
+    neighborhoods: ["Bodakdev", "Navrangpura", "Thaltej", "Vastrapur"],
+  },
+  jaipur: {
+    name: "Jaipur",
+    venues: [
+      "PVR: World Trade Park",
+      "Jawahar Kala Kendra",
+      "SMS Indoor Stadium",
+      "Birla Auditorium",
+    ],
+    neighborhoods: ["Malviya Nagar", "C-Scheme", "Vaishali Nagar", "Bani Park"],
+  },
+  kochi: {
+    name: "Kochi",
+    venues: [
+      "PVR: Lulu Mall",
+      "Durbar Hall Ground",
+      "JTPac",
+      "Rajiv Gandhi Indoor Stadium",
+    ],
+    neighborhoods: ["Edappally", "Fort Kochi", "Kakkanad", "Marine Drive"],
+  },
 };
+
+function toCityId(value?: string | null) {
+  return value
+    ?.trim()
+    .toLocaleLowerCase("en-IN")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+function cityNameFromId(cityId: string) {
+  const knownCity = cityDetails[cityId]?.name;
+  if (knownCity) return knownCity;
+
+  const generatedCityName = cityId
+    .split("-")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+  return generatedCityName || "Kolkata";
+}
+
+function rotate<T>(items: T[], offset: number) {
+  if (!items.length) return items;
+  const start = offset % items.length;
+  return [...items.slice(start), ...items.slice(0, start)];
+}
+
+function citySeed(cityId: string) {
+  return [...cityId].reduce(
+    (total, character) => total + character.charCodeAt(0),
+    0,
+  );
+}
+
+export function getMockCatalogForCity(cityValue?: string | null) {
+  const cityId = toCityId(cityValue) ?? "kolkata";
+  const city = cityNameFromId(cityId);
+  const cityDetail = cityDetails[cityId];
+  const venues = cityDetail?.venues ?? [
+    `${city} City Centre`,
+    `${city} Arts District`,
+    `${city} Convention Centre`,
+    `${city} Indoor Arena`,
+  ];
+  const seed = citySeed(cityId);
+  const priceAdjustment = ((seed % 5) - 2) * 10;
+
+  return mockCatalog.map((item, index) => ({
+    ...item,
+    id: cityId === "kolkata" ? item.id : `${cityId}-${item.id}`,
+    city,
+    venue: venues[(index + seed) % venues.length],
+    priceFrom: Math.max(99, item.priceFrom + priceAdjustment),
+    badge:
+      cityId === "kolkata" || item.badge ? item.badge : `Popular in ${city}`,
+  }));
+}
+
+export function getMockHomepageCatalog(
+  cityValue?: string | null,
+): HomepageCatalog {
+  const cityId = toCityId(cityValue) ?? "kolkata";
+  const city = cityNameFromId(cityId);
+  const seed = citySeed(cityId);
+  const allContent = rotate(getMockCatalogForCity(cityId), seed);
+  const movies = allContent.filter((item) => item.category === "Movie");
+  const events = allContent.filter((item) => item.category !== "Movie");
+  const byEventType = (eventType: string) =>
+    allContent.filter((item) => item.eventType === eventType);
+  const localVenues = rotate(mockVenues, seed).map((venue, index) => {
+    const cityDetail = cityDetails[cityId];
+    const venueNames = cityDetail?.venues ?? [
+      `${city} City Centre`,
+      `${city} Arts District`,
+      `${city} Convention Centre`,
+      `${city} Indoor Arena`,
+    ];
+    const neighborhoods = cityDetail?.neighborhoods ?? [
+      "Central",
+      "Downtown",
+      "Riverside",
+      "City Centre",
+    ];
+    return {
+      ...venue,
+      id: cityId === "kolkata" ? venue.id : `${cityId}-${venue.id}`,
+      name: venueNames[index % venueNames.length],
+      neighborhood: neighborhoods[index % neighborhoods.length],
+      city,
+      eventCount: Math.max(2, venue.eventCount + ((seed + index) % 5) - 2),
+    };
+  });
+
+  return {
+    city,
+    hero: allContent[0] ?? mockCatalog[0],
+    trending: allContent.slice(0, 6),
+    recommendedMovies: movies,
+    liveEvents: events,
+    concerts: byEventType("CONCERT"),
+    comedy: byEventType("COMEDY"),
+    sports: byEventType("SPORT"),
+    weekendExperiences: byEventType("ADVENTURE"),
+    under499: allContent.filter((item) => item.priceFrom < 500),
+    popularVenues: localVenues,
+    personalized: rotate(allContent, 3).slice(0, 6),
+  };
+}
+
+export const mockHomepageCatalog = getMockHomepageCatalog("kolkata");

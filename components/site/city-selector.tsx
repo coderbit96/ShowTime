@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Building2,
   BookOpen,
@@ -124,6 +125,8 @@ function distanceInKm(latitude: number, longitude: number, city: PopularCity) {
 }
 
 export function CitySelector() {
+  const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [locationMessage, setLocationMessage] = useState<string | null>(null);
@@ -167,6 +170,19 @@ export function CitySelector() {
     };
   }, [open]);
 
+  useEffect(() => {
+    if (!cityId || typeof document === "undefined") return;
+
+    const storedCityId = document.cookie
+      .split("; ")
+      .find((entry) => entry.startsWith("show-time-city="))
+      ?.split("=")[1];
+    if (storedCityId === cityId) return;
+
+    document.cookie = `show-time-city=${encodeURIComponent(cityId)}; path=/; max-age=31536000; samesite=lax`;
+    if (pathname === "/") router.refresh();
+  }, [cityId, pathname, router]);
+
   function closePicker() {
     setOpen(false);
     setQuery("");
@@ -174,8 +190,12 @@ export function CitySelector() {
   }
 
   function chooseCity(nextCityId: string) {
+    if (typeof document !== "undefined") {
+      document.cookie = `show-time-city=${encodeURIComponent(nextCityId)}; path=/; max-age=31536000; samesite=lax`;
+    }
     setCityId(nextCityId);
     closePicker();
+    if (pathname === "/") router.refresh();
   }
 
   function detectLocation() {

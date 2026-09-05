@@ -1,4 +1,8 @@
-import { mockCatalog, type ContentCard } from "@/lib/catalog";
+import {
+  getMockCatalogForCity,
+  mockCatalog,
+  type ContentCard,
+} from "@/lib/catalog";
 import { connectToDatabase } from "@/lib/mongodb/connect";
 import { Category, City, Event, Movie, Show, Venue } from "@/models";
 import type { PriceBucket, SearchFilters, SearchResponse } from "./types";
@@ -113,7 +117,10 @@ function priceMatches(price: number, buckets: PriceBucket[]) {
 function searchMockCatalog(filters: SearchFilters): SearchResponse {
   const query = filters.query?.toLowerCase();
   const range = getDateRange(filters);
-  const matches = mockCatalog.filter((item) => {
+  const catalog = filters.city.length
+    ? [...new Set(filters.city)].flatMap((city) => getMockCatalogForCity(city))
+    : mockCatalog;
+  const matches = catalog.filter((item) => {
     const haystack = [
       item.title,
       item.category,

@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getFirebaseAdminAuth } from "@/lib/firebase/admin";
+import { connectToDatabase } from "@/lib/mongodb/connect";
+import { User } from "@/models";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -52,12 +55,6 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const [{ getFirebaseAdminAuth }, { connectToDatabase }, { User }] =
-      await Promise.all([
-        import("@/lib/firebase/admin"),
-        import("@/lib/mongodb/connect"),
-        import("@/models"),
-      ]);
     const decoded = await getFirebaseAdminAuth().verifyIdToken(token);
     if (!decoded.email)
       return NextResponse.json(

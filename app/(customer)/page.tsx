@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import {
   ArrowRight,
   CalendarDays,
@@ -36,9 +37,15 @@ function MixedCards({ items }: { items: ContentCard[] }) {
   );
 }
 
+function citySearchHref(city: string, filters: Record<string, string> = {}) {
+  const params = new URLSearchParams({ city, ...filters });
+  return `/search?${params.toString()}`;
+}
+
 export default async function CustomerHomePage() {
+  const cityId = (await cookies()).get("show-time-city")?.value;
   const [catalog, flashSale] = await Promise.all([
-    getHomepageCatalog(),
+    getHomepageCatalog({ cityId }),
     getActiveFlashSale(),
   ]);
 
@@ -46,8 +53,8 @@ export default async function CustomerHomePage() {
     <main className="overflow-hidden bg-background text-foreground">
       <section className="relative isolate min-h-[560px] overflow-hidden bg-background text-foreground">
         <Image
-          src="/images/catalog/midnight-grove-live.png"
-          alt="Guests arriving at an open-air cultural festival in Kolkata"
+          src={catalog.hero.image}
+          alt={`Entertainment plans in ${catalog.city}`}
           fill
           priority
           sizes="100vw"
@@ -64,7 +71,7 @@ export default async function CustomerHomePage() {
               Around you in {catalog.city}
             </div>
             <p className="mt-7 text-xs font-bold uppercase tracking-[0.18em] text-primary">
-              Kolkata is happening
+              {catalog.city} is happening
             </p>
             <h1 className="mt-4 text-4xl font-semibold leading-[1.02] tracking-tight sm:text-5xl min-[900px]:max-w-none min-[900px]:whitespace-nowrap min-[900px]:text-[clamp(2.75rem,4.6vw,4rem)]">
               Make tonight worth talking about.
@@ -140,7 +147,7 @@ export default async function CustomerHomePage() {
           <BrowseSection
             id="trending"
             title="Trending Near You"
-            href="/search"
+            href={citySearchHref(catalog.city)}
             description={
               "Plans people in " + catalog.city + " are saving right now."
             }
@@ -155,7 +162,7 @@ export default async function CustomerHomePage() {
           <BrowseSection
             id="recommended-movies"
             title="Recommended Movies"
-            href="/search?eventType=MOVIE"
+            href={citySearchHref(catalog.city, { eventType: "MOVIE" })}
             description="Big-screen stories, thoughtfully picked."
           >
             <ContentRail>
@@ -170,7 +177,7 @@ export default async function CustomerHomePage() {
           <BrowseSection
             id="live-events"
             title="Live Events"
-            href="/search?category=Live%20Event"
+            href={citySearchHref(catalog.city, { category: "Live Event" })}
             description="Workshops, city drops, and things to do this week."
           >
             <ContentRail>
@@ -183,7 +190,7 @@ export default async function CustomerHomePage() {
           <BrowseSection
             id="concerts"
             title="Concerts"
-            href="/search?eventType=CONCERT"
+            href={citySearchHref(catalog.city, { eventType: "CONCERT" })}
             description="Volume up, phone down."
           >
             <ContentRail>
@@ -196,7 +203,7 @@ export default async function CustomerHomePage() {
           <BrowseSection
             id="comedy"
             title="Comedy Shows"
-            href="/search?eventType=COMEDY"
+            href={citySearchHref(catalog.city, { eventType: "COMEDY" })}
             description="A very good reason to leave the group chat."
           >
             <ContentRail>
@@ -209,7 +216,7 @@ export default async function CustomerHomePage() {
           <BrowseSection
             id="sports"
             title="Sports"
-            href="/search?eventType=SPORT"
+            href={citySearchHref(catalog.city, { eventType: "SPORT" })}
             description="Feel the crowd, not just the score."
           >
             <ContentRail>
@@ -225,7 +232,7 @@ export default async function CustomerHomePage() {
             <BrowseSection
               id="weekend-experiences"
               title="Weekend Experiences"
-              href="/search?date=weekend"
+              href={citySearchHref(catalog.city, { date: "weekend" })}
               description="Trade another scroll for a story you can actually tell."
             >
               <ContentRail>
@@ -241,7 +248,7 @@ export default async function CustomerHomePage() {
           <BrowseSection
             id="under-499"
             title={"Events Under " + "\u20b9" + "499"}
-            href="/search?price=under-499"
+            href={citySearchHref(catalog.city, { price: "under-499" })}
             description="Low lift, high return."
           >
             <ContentRail>
@@ -254,7 +261,7 @@ export default async function CustomerHomePage() {
           <BrowseSection
             id="popular-venues"
             title="Popular Venues"
-            href="/search"
+            href={citySearchHref(catalog.city)}
             description="A few places worth knowing."
           >
             <ContentRail>
