@@ -98,7 +98,7 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <div className="premium-panel ml-auto hidden min-w-0 max-w-xl flex-1 rounded-md px-3 py-1 md:block lg:ml-4">
+        <div className="premium-panel ml-auto hidden min-w-0 max-w-xl flex-1 rounded-md px-3 py-1 transition focus-within:border-primary/70 focus-within:ring-2 focus-within:ring-primary/15 md:block lg:ml-4">
           <GlobalSearch />
         </div>
 

@@ -300,7 +300,10 @@ export function CitySelector() {
                   </button>
                 </header>
 
-                <div className="overflow-y-auto px-4 pb-5 pt-4 sm:px-6 sm:pb-7">
+                <div
+                  data-lenis-prevent=""
+                  className="touch-pan-y overflow-y-auto overscroll-contain px-4 pb-5 pt-4 sm:px-6 sm:pb-7"
+                >
                   <label className="relative block">
                     <span className="sr-only">Search for your city</span>
                     <Search
@@ -442,7 +445,7 @@ function CityOption({
       onClick={() => onSelect(city.id)}
       className={`relative flex min-h-10 items-center rounded-lg text-sm transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
         compact
-          ? "justify-between px-2 text-muted hover:bg-surface-muted hover:text-foreground"
+          ? "city-option-hover w-full justify-center px-3 text-muted hover:-translate-y-0.5 hover:bg-[linear-gradient(135deg,rgba(109,40,217,0.09),rgba(8,134,166,0.1))] hover:text-secondary hover:shadow-[0_10px_22px_rgba(8,134,166,0.12)]"
           : "w-full justify-center border border-border bg-background px-3 py-2.5 text-center font-medium text-foreground hover:-translate-y-0.5 hover:border-primary/70 hover:bg-primary/10 hover:text-primary hover:shadow-[0_0_20px_rgba(6,182,212,0.20)]"
       } ${selected ? "bg-primary/10 text-primary" : ""}`}
     >

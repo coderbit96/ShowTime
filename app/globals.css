@@ -131,6 +131,12 @@ textarea {
   outline-offset: 3px;
 }
 
+/* The header search uses its surrounding panel as the single focus indicator. */
+.global-search-input:focus,
+.global-search-input:focus-visible {
+  outline: none !important;
+}
+
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -212,10 +218,30 @@ textarea {
   animation: show-time-progress 1.4s ease-in-out infinite;
 }
 
+@keyframes show-time-city-hover {
+  0% {
+    box-shadow: 0 0 0 rgba(8, 134, 166, 0);
+  }
+  55% {
+    box-shadow: 0 0 20px rgba(8, 134, 166, 0.16);
+  }
+  100% {
+    box-shadow: 0 10px 22px rgba(8, 134, 166, 0.12);
+  }
+}
+
+.city-option-hover:hover {
+  animation: show-time-city-hover 360ms ease-out both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .loading-logo-ring,
   .loading-dot,
   .loading-progress {
+    animation: none;
+  }
+
+  .city-option-hover:hover {
     animation: none;
   }
 

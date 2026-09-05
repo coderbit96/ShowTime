@@ -7,6 +7,7 @@ import {
   ShieldCheck,
   TicketCheck,
 } from "lucide-react";
+import { Magnetic } from "@/components/motion";
 
 const footerGroups = [
   {
@@ -119,13 +120,15 @@ export function SiteFooter() {
               Get booking help, check cancellation options, or find answers in
               minutes.
             </p>
-            <Link
-              href="/help"
-              className="premium-button mt-5 h-10 w-full justify-center gap-2 px-4 text-sm font-semibold"
-            >
-              Visit help center
-              <ArrowRight className="size-4" aria-hidden="true" />
-            </Link>
+            <Magnetic className="mt-5 w-full" strength={0.08}>
+              <Link
+                href="/help"
+                className="premium-button h-10 w-full justify-center gap-2 px-4 text-sm font-semibold"
+              >
+                Visit help center
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </Link>
+            </Magnetic>
           </aside>
         </div>
 

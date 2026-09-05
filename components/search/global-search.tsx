@@ -84,7 +84,7 @@ export function GlobalSearch({
             if (event.key === "Escape") setOpen(false);
           }}
           placeholder="Search movies, artists, events, venues..."
-          className="h-11 min-w-0 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-muted"
+          className="global-search-input h-11 min-w-0 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-muted focus:outline-none focus-visible:outline-none"
           aria-label="Search movies, artists, events, and venues"
         />
         {query ? (

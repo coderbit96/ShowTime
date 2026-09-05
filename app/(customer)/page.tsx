@@ -19,7 +19,7 @@ import {
   MovieCard,
   VenueCard,
 } from "@/components/catalog";
-import { ScrollReveal } from "@/components/motion";
+import { Magnetic, ScrollReveal } from "@/components/motion";
 import { NewsletterForm } from "@/components/site";
 import { getHomepageCatalog, type ContentCard } from "@/lib/catalog";
 import { getActiveFlashSale } from "@/lib/promotions/flash-sale";
@@ -119,19 +119,23 @@ export default async function CustomerHomePage() {
               </div>
             </div>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link
-                href="#live-events"
-                className="premium-button h-11 gap-2 px-5 text-sm font-semibold"
-              >
-                Book Now
-                <ArrowRight className="size-4" aria-hidden="true" />
-              </Link>
-              <Link
-                href="#trending"
-                className="premium-button-secondary h-11 gap-2 px-5 text-sm font-semibold"
-              >
-                View all events
-              </Link>
+              <Magnetic>
+                <Link
+                  href="#live-events"
+                  className="premium-button h-11 gap-2 px-5 text-sm font-semibold"
+                >
+                  Book Now
+                  <ArrowRight className="size-4" aria-hidden="true" />
+                </Link>
+              </Magnetic>
+              <Magnetic strength={0.09}>
+                <Link
+                  href="#trending"
+                  className="premium-button-secondary h-11 gap-2 px-5 text-sm font-semibold"
+                >
+                  View all events
+                </Link>
+              </Magnetic>
             </div>
           </div>
         </div>
